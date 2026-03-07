@@ -28,6 +28,17 @@ interface Session {
   price?: number;
 }
 
+interface Masterclass {
+  id: number;
+  mentorName: string;
+  originalHourlyRate: number;
+  title: string;
+  pricePerStudent: number;
+  maxCapacity: number;
+  currentEnrolled: number;
+  scheduledDate: string;
+}
+
 export default function StudentDashboard() {
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -42,12 +53,24 @@ export default function StudentDashboard() {
   const [reviewData, setReviewData] = useState({ rating: 5, comment: '' });
   const [filter, setFilter] = useState({ skill: '', minExp: 0 });
   const [isBooking, setIsBooking] = useState(false);
+  const [masterclasses, setMasterclasses] = useState<Masterclass[]>([]);
+  const [enrollingClassId, setEnrollingClassId] = useState<number | null>(null);
   const { user, logout } = useAuth();
 
   useEffect(() => {
     fetchMentors();
     fetchSessions();
+    fetchMasterclasses();
   }, []);
+
+  const fetchMasterclasses = async () => {
+    try {
+      const res = await api.get('/masterclasses');
+      setMasterclasses(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchMentors = async () => {
     try {
@@ -152,6 +175,21 @@ export default function StudentDashboard() {
     }
   };
 
+  const handleEnrollMasterclass = async (id: number) => {
+    setEnrollingClassId(id);
+    try {
+      await api.post(`/masterclasses/${id}/enroll`);
+      alert("Successfully enrolled in Masterclass!");
+      fetchMasterclasses();
+      fetchSessions();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to enroll. You might already be enrolled.");
+    } finally {
+      setEnrollingClassId(null);
+    }
+  };
+
   const filteredMentors = mentors.filter(m => {
     const matchesSkill = !filter.skill || m.skills.some(s => s.toLowerCase().includes(filter.skill.toLowerCase()));
     const matchesExp = m.experienceYears >= filter.minExp;
@@ -233,6 +271,59 @@ export default function StudentDashboard() {
             </div>
           </div>
         </section>
+
+        {/* Masterclass Circles */}
+        {masterclasses.length > 0 && (
+          <section className="mb-24 space-y-8">
+            <div className="flex items-center gap-4 border-b border-border-primary pb-6">
+              <h3 className="text-3xl font-serif italic text-text-primary">🔥 Trending Masterclass Circles</h3>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-brand-accent mt-2">1-to-Many Accelerated Learning</p>
+            </div>
+
+            <div className="flex gap-6 overflow-x-auto pb-8 snap-x">
+              {masterclasses.map(cls => (
+                <div key={cls.id} className="min-w-[340px] p-8 rounded-[32px] border border-brand-accent/30 bg-surface-primary hover:bg-brand-accent/[0.02] transition-all duration-500 flex flex-col snap-center relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-accent via-orange-500 to-transparent" />
+
+                  <div className="flex justify-between items-start mb-6">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-primary/40 bg-text-primary/5 px-3 py-1.5 rounded-full">Group Session</span>
+                    <div className="text-right">
+                      <div className="text-sm font-mono text-text-primary/30 line-through">₹{cls.originalHourlyRate}/hr</div>
+                      <div className="text-2xl font-serif italic text-brand-accent">₹{cls.pricePerStudent}</div>
+                    </div>
+                  </div>
+
+                  <h4 className="text-xl font-serif text-text-primary mb-2 line-clamp-2">{cls.title}</h4>
+                  <p className="text-xs text-text-primary/40 mb-6 font-light">Hosted by {cls.mentorName}</p>
+
+                  <div className="space-y-4 mb-8 mt-auto">
+                    <div className="flex items-center gap-3 text-text-primary/60">
+                      <Calendar size={14} className="text-brand-accent/60" />
+                      <span className="text-xs font-mono">{new Date(cls.scheduledDate).toLocaleString()}</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest text-text-primary/40">
+                        <span>Capacity</span>
+                        <span>{cls.currentEnrolled} / {cls.maxCapacity} Seats</span>
+                      </div>
+                      <div className="w-full h-1 bg-bg-primary rounded-full overflow-hidden">
+                        <div className="h-full bg-brand-accent" style={{ width: `${(cls.currentEnrolled / cls.maxCapacity) * 100}%` }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleEnrollMasterclass(cls.id)}
+                    disabled={cls.currentEnrolled >= cls.maxCapacity || enrollingClassId === cls.id}
+                    className="w-full py-4 rounded-2xl bg-text-primary text-bg-primary font-bold text-[10px] uppercase tracking-widest hover:bg-brand-accent hover:text-bg-primary transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                  >
+                    {enrollingClassId === cls.id ? 'Processing...' : cls.currentEnrolled >= cls.maxCapacity ? 'Class Full' : 'Enroll Now'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           {/* Left Column - Mentors */}

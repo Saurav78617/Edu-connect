@@ -34,6 +34,10 @@ export default function MentorDashboard() {
   const [showReviews, setShowReviews] = useState(false);
   const [activeChat, setActiveChat] = useState<{ id: number; name: string } | null>(null);
   const [loadingActionId, setLoadingActionId] = useState<number | null>(null);
+  // Masterclass states
+  const [showMasterclassModal, setShowMasterclassModal] = useState(false);
+  const [masterclassForm, setMasterclassForm] = useState({ title: '', pricePerStudent: 500, scheduledDate: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, logout } = useAuth();
 
   useEffect(() => {
@@ -83,6 +87,22 @@ export default function MentorDashboard() {
       console.error(err);
     } finally {
       setLoadingActionId(null);
+    }
+  };
+
+  const handleCreateMasterclass = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await api.post('/masterclasses', masterclassForm);
+      setShowMasterclassModal(false);
+      setMasterclassForm({ title: '', pricePerStudent: 500, scheduledDate: '' });
+      alert("Masterclass created successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to create masterclass.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -326,6 +346,22 @@ export default function MentorDashboard() {
                 Edit Profile
               </Link>
             </div>
+
+            <div className="p-10 rounded-[40px] border border-border-primary bg-surface-primary flex flex-col items-center text-center space-y-6">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                <Video size={32} />
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-xl font-serif italic text-text-primary">Masterclass Circles</h4>
+                <p className="text-sm text-text-primary/20 font-light">Host a 1-to-many session for up to 10 students.</p>
+              </div>
+              <button
+                onClick={() => setShowMasterclassModal(true)}
+                className="w-full py-4 rounded-2xl bg-text-primary text-bg-primary text-[10px] font-bold uppercase tracking-widest hover:bg-brand-accent hover:text-white transition-all"
+              >
+                Host Masterclass
+              </button>
+            </div>
           </div>
         </div>
       </main>
@@ -337,6 +373,96 @@ export default function MentorDashboard() {
             otherParticipantName={activeChat.name}
             onClose={() => setActiveChat(null)}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showMasterclassModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMasterclassModal(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-bg-primary border border-border-primary p-10 rounded-[40px] shadow-2xl overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-accent to-transparent" />
+
+              <button
+                onClick={() => setShowMasterclassModal(false)}
+                className="absolute top-6 right-6 text-text-primary/20 hover:text-text-primary transition-colors"
+                type="button"
+              >
+                <XCircle size={24} />
+              </button>
+
+              <form onSubmit={handleCreateMasterclass} className="space-y-8">
+                <div className="space-y-2">
+                  <h3 className="text-3xl font-serif text-text-primary italic">Host Masterclass</h3>
+                  <p className="text-text-primary/40 text-sm">Create a group session. Expand your impact.</p>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="relative group">
+                    <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20 mb-4 group-focus-within:text-brand-accent transition-all duration-500">
+                      Masterclass Title
+                    </label>
+                    <input
+                      required
+                      type="text"
+                      className="w-full bg-transparent border-b border-border-primary py-4 text-text-primary outline-none focus:border-brand-accent transition-all duration-500 placeholder:text-text-primary/10 font-light"
+                      placeholder="e.g. System Design for Senior Engineers"
+                      value={masterclassForm.title}
+                      onChange={(e) => setMasterclassForm({ ...masterclassForm, title: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="relative group">
+                    <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20 mb-4 group-focus-within:text-brand-accent transition-all duration-500">
+                      Price Per Student (₹)
+                    </label>
+                    <input
+                      required
+                      type="number"
+                      min="100"
+                      className="w-full bg-transparent border-b border-border-primary py-4 text-text-primary outline-none focus:border-brand-accent transition-all duration-500 font-mono"
+                      value={masterclassForm.pricePerStudent}
+                      onChange={(e) => setMasterclassForm({ ...masterclassForm, pricePerStudent: Number(e.target.value) })}
+                    />
+                  </div>
+
+                  <div className="relative group">
+                    <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20 mb-4 group-focus-within:text-brand-accent transition-all duration-500">
+                      Date & Time (IST)
+                    </label>
+                    <input
+                      required
+                      type="datetime-local"
+                      className="w-full bg-transparent border-b border-border-primary py-4 text-text-primary outline-none focus:border-brand-accent transition-all duration-500 font-mono"
+                      value={masterclassForm.scheduledDate}
+                      onChange={(e) => setMasterclassForm({ ...masterclassForm, scheduledDate: e.target.value })}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-text-primary text-bg-primary py-5 rounded-2xl font-bold text-xs uppercase tracking-[0.2em] hover:bg-brand-accent hover:text-text-primary transition-all duration-500 flex justify-center items-center gap-2 disabled:opacity-50"
+                  >
+                    {isSubmitting ? (
+                      <>Deploying <div className="w-4 h-4 border-2 border-bg-primary border-t-transparent rounded-full animate-spin" /></>
+                    ) : 'Initialize Session'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

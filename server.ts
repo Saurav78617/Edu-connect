@@ -408,6 +408,87 @@ async function startServer() {
     }
   });
 
+  // --- MASTERCLASS ROUTES ---
+  app.post("/api/masterclasses", authenticateToken, (req: AuthRequest, res, next) => {
+    try {
+      const { title, pricePerStudent, scheduledDate } = req.body;
+      const mentorId = req.user?.id;
+
+      if (req.user?.role !== 'MENTOR') {
+        return res.status(403).json({ message: "Only mentors can host masterclasses" });
+      }
+
+      if (!title || pricePerStudent === undefined || !scheduledDate) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const stmt = db.prepare("INSERT INTO masterclasses (mentorId, title, pricePerStudent, scheduledDate) VALUES (?, ?, ?, ?)");
+      const result = stmt.run(mentorId, title, pricePerStudent, scheduledDate);
+
+      res.status(201).json({ id: result.lastInsertRowid, message: "Masterclass created successfully" });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/masterclasses", (req, res, next) => {
+    try {
+      // Fetch all future masterclasses with mentor details
+      const masterclasses = db.prepare(`
+         SELECT m.*, u.name as mentorName, u.hourlyRate as originalHourlyRate
+         FROM masterclasses m
+         JOIN users u ON m.mentorId = u.id
+         WHERE datetime(m.scheduledDate) >= datetime('now')
+         ORDER BY m.scheduledDate ASC
+       `).all();
+      res.json(masterclasses);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/masterclasses/:id/enroll", authenticateToken, (req: AuthRequest, res, next) => {
+    try {
+      const { id } = req.params;
+      const studentId = req.user?.id;
+
+      if (req.user?.role !== 'STUDENT') {
+        return res.status(403).json({ message: "Only students can enroll in masterclasses" });
+      }
+
+      // Start transaction or do a check-and-update
+      const masterclass = db.prepare("SELECT * FROM masterclasses WHERE id = ?").get(id) as any;
+      if (!masterclass) {
+        return res.status(404).json({ message: "Masterclass not found" });
+      }
+
+      if (masterclass.currentEnrolled >= masterclass.maxCapacity) {
+        return res.status(400).json({ message: "Class is full" });
+      }
+
+      // Check if already enrolled
+      const alreadyEnrolled = db.prepare("SELECT 1 FROM enrollments WHERE studentId = ? AND masterclassId = ?").get(studentId, id);
+      if (alreadyEnrolled) {
+        return res.status(400).json({ message: "Already enrolled in this masterclass" });
+      }
+
+      // Enroll student
+      db.prepare("INSERT INTO enrollments (studentId, masterclassId) VALUES (?, ?)").run(studentId, id);
+
+      // Increment enrolled count
+      db.prepare("UPDATE masterclasses SET currentEnrolled = currentEnrolled + 1 WHERE id = ?").run(id);
+
+      // Notify the mentor
+      const student = db.prepare("SELECT name FROM users WHERE id = ?").get(studentId) as any;
+      createNotification(masterclass.mentorId, "New Masterclass Enrollment", `${student.name} enrolled in your ${masterclass.title} masterclass.`);
+
+      res.status(200).json({ message: "Successfully enrolled in masterclass" });
+
+    } catch (error) {
+      next(error);
+    }
+  });
+
   app.get("/api/notifications", authenticateToken, (req: AuthRequest, res, next) => {
     try {
       const notifications = db.prepare("SELECT * FROM notifications WHERE userId = ? ORDER BY createdAt DESC LIMIT 20").all(req.user?.id);

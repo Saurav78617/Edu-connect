@@ -65,12 +65,36 @@ db.exec(`
     FOREIGN KEY (senderId) REFERENCES users(id)
   );
 
+  CREATE TABLE IF NOT EXISTS masterclasses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mentorId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    pricePerStudent REAL NOT NULL,
+    maxCapacity INTEGER DEFAULT 10,
+    currentEnrolled INTEGER DEFAULT 0,
+    scheduledDate TEXT NOT NULL,
+    createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (mentorId) REFERENCES users(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS enrollments (
+    studentId INTEGER NOT NULL,
+    masterclassId INTEGER NOT NULL,
+    enrolledAt TEXT DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (studentId, masterclassId),
+    FOREIGN KEY (studentId) REFERENCES users(id),
+    FOREIGN KEY (masterclassId) REFERENCES masterclasses(id)
+  );
+
   -- Performance Indices
   CREATE INDEX IF NOT EXISTS idx_sessions_studentId ON sessions(studentId);
   CREATE INDEX IF NOT EXISTS idx_sessions_mentorId ON sessions(mentorId);
   CREATE INDEX IF NOT EXISTS idx_reviews_mentorId ON reviews(mentorId);
   CREATE INDEX IF NOT EXISTS idx_notifications_userId ON notifications(userId);
   CREATE INDEX IF NOT EXISTS idx_messages_sessionId ON messages(sessionId);
+  CREATE INDEX IF NOT EXISTS idx_masterclasses_mentorId ON masterclasses(mentorId);
+  CREATE INDEX IF NOT EXISTS idx_enrollments_studentId ON enrollments(studentId);
+  CREATE INDEX IF NOT EXISTS idx_enrollments_masterclassId ON enrollments(masterclassId);
 `);
 
 // Migration: Add price column to sessions if it doesn't exist
