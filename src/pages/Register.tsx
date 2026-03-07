@@ -206,6 +206,7 @@ export default function Register() {
                     <input
                       type="text"
                       required
+                      autoComplete="name"
                       className="w-full bg-transparent border-b border-border-primary py-4 pl-10 pr-4 text-text-primary outline-none focus:border-brand-accent transition-all placeholder:text-text-primary/5 font-light"
                       placeholder="John Doe"
                       value={formData.name}
@@ -224,6 +225,7 @@ export default function Register() {
                     <input
                       type="email"
                       required
+                      autoComplete="email"
                       className="w-full bg-transparent border-b border-border-primary py-4 pl-10 pr-4 text-text-primary outline-none focus:border-brand-accent transition-all placeholder:text-text-primary/5 font-light"
                       placeholder="name@domain.com"
                       value={formData.email}
@@ -242,6 +244,7 @@ export default function Register() {
                     <input
                       type="password"
                       required
+                      autoComplete="new-password"
                       className="w-full bg-transparent border-b border-border-primary py-4 pl-10 pr-4 text-text-primary outline-none focus:border-brand-accent transition-all placeholder:text-text-primary/5 font-light"
                       placeholder="••••••••"
                       value={formData.password}

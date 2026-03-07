@@ -215,6 +215,7 @@ export default function Login() {
                     <input
                       type="email"
                       required
+                      autoComplete="username"
                       className="w-full bg-transparent border-b border-border-primary py-4 pl-10 pr-4 text-text-primary outline-none focus:border-brand-accent transition-all duration-500 placeholder:text-text-primary/10 font-light text-lg"
                       placeholder="name@domain.com"
                       value={email}
@@ -242,6 +243,7 @@ export default function Login() {
                     <input
                       type="password"
                       required
+                      autoComplete="current-password"
                       className="w-full bg-transparent border-b border-border-primary py-4 pl-10 pr-4 text-text-primary outline-none focus:border-brand-accent transition-all duration-500 placeholder:text-text-primary/10 font-light text-lg"
                       placeholder="••••••••"
                       value={password}
