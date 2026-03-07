@@ -32,9 +32,9 @@ export default function GridBackground() {
 
       {/* Hardware-Accelerated Interactive Reveal Glow */}
       <motion.div
-        className="absolute w-[800px] h-[800px] rounded-full pointer-events-none mix-blend-screen opacity-50"
+        className="absolute w-[800px] h-[800px] rounded-full pointer-events-none mix-blend-screen opacity-100"
         style={{
-          background: 'radial-gradient(circle, rgba(249, 115, 22, 0.15) 0%, transparent 50%)',
+          background: 'radial-gradient(circle, rgba(249, 115, 22, 0.35) 0%, transparent 50%)',
           x: useTransform(x, v => v - 400), // Offset by half width to center on cursor
           y: useTransform(y, v => v - 400), // Offset by half height to center on cursor
         }}
