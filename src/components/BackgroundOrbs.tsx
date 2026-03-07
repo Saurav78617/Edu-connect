@@ -20,8 +20,8 @@ export default function BackgroundOrbs() {
                     repeat: Infinity,
                     ease: "linear"
                 }}
-                className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-brand-accent mix-blend-screen"
-                style={{ filter: 'blur(120px)', opacity }}
+                className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-brand-accent"
+                style={{ filter: 'blur(80px)', opacity }}
             />
 
             {/* Bottom Right Orb - Deep Violet/Purple for contrast */}
@@ -35,8 +35,8 @@ export default function BackgroundOrbs() {
                     repeat: Infinity,
                     ease: "linear"
                 }}
-                className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-indigo-500 mix-blend-screen"
-                style={{ filter: 'blur(140px)', opacity: opacity * 0.8 }}
+                className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-indigo-500"
+                style={{ filter: 'blur(100px)', opacity: opacity * 0.8 }}
             />
         </div>
     );
