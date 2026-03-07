@@ -39,7 +39,7 @@
 }
 
 .glass {
-  @apply bg-text-primary/5 backdrop-blur-[24px] border border-border-primary shadow-[0_8px_32px_rgba(0, 0, 0, 0.1)];
+  @apply bg-text-primary/5 backdrop-blur-[24px] border border-border-primary shadow-[0_8px_32px] shadow-black/10;
 }
 
 .card-hover {
