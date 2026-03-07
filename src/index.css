@@ -19,7 +19,9 @@
   --text-primary: #141414;
   --border-primary: rgba(0, 0, 0, 0.05);
   --surface-primary: rgba(0, 0, 0, 0.02);
-  --grid-color: #000000;
+  --grid-color: #F27D26;
+  /* Brand Orange */
+  --grid-opacity: 0.06;
 }
 
 .dark {
@@ -28,6 +30,7 @@
   --border-primary: rgba(255, 255, 255, 0.05);
   --surface-primary: rgba(255, 255, 255, 0.02);
   --grid-color: #ffffff;
+  --grid-opacity: 0.03;
 }
 
 @layer base {
@@ -37,7 +40,7 @@
 }
 
 .glass {
-  @apply bg-text-primary/5 backdrop-blur-[24px] border border-border-primary shadow-[0_8px_32px_rgba(0,0,0,0.1)];
+  @apply bg-text-primary/5 backdrop-blur-[24px] border border-border-primary shadow-[0_8px_32px_rgba(0, 0, 0, 0.1)];
 }
 
 .card-hover {
