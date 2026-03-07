@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-brand-accent: #F27D26;
+
+  --color-bg-primary: var(--bg-primary);
+  --color-text-primary: var(--text-primary);
+  --color-border-primary: var(--border-primary);
+  --color-surface-primary: var(--surface-primary);
+}
+
+:root {
+  --bg-primary: #ffffff;
+  --text-primary: #141414;
+  --border-primary: rgba(0, 0, 0, 0.05);
+  --surface-primary: rgba(0, 0, 0, 0.02);
+  --grid-color: #000000;
+}
+
+.dark {
+  --bg-primary: #050505;
+  --text-primary: #ffffff;
+  --border-primary: rgba(255, 255, 255, 0.05);
+  --surface-primary: rgba(255, 255, 255, 0.02);
+  --grid-color: #ffffff;
+}
+
+@layer base {
+  body {
+    @apply bg-bg-primary text-text-primary font-sans antialiased transition-colors duration-300;
+  }
+}
+
+.glass {
+  @apply bg-text-primary/5 backdrop-blur-[24px] border border-border-primary shadow-[0_8px_32px_rgba(0, 0, 0, 0.1)];
+}
+
+.card-hover {
+  @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-accent);
+}

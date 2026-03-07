@@ -1,0 +1,64 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const srcDir = path.join(__dirname, 'src');
+
+// Recursively get all .tsx files
+function getAllTsxFiles(dir, fileList = []) {
+    const files = fs.readdirSync(dir);
+
+    for (const file of files) {
+        const filePath = path.join(dir, file);
+        if (fs.statSync(filePath).isDirectory()) {
+            getAllTsxFiles(filePath, fileList);
+        } else if (filePath.endsWith('.tsx')) {
+            fileList.push(filePath);
+        }
+    }
+    return fileList;
+}
+
+const tsxFiles = getAllTsxFiles(srcDir);
+let totalReplacements = 0;
+
+for (const file of tsxFiles) {
+    let content = fs.readFileSync(file, 'utf8');
+    let newContent = content;
+
+    // 1. bg-[#0a0a0a] -> bg-bg-primary
+    newContent = newContent.replace(/bg-\[#0a0a0a\]/g, 'bg-bg-primary');
+
+    // 2. text-white/XX -> text-text-primary/XX
+    newContent = newContent.replace(/text-white\/([0-9]+)/g, 'text-text-primary/$1');
+
+    // 3. text-white -> text-text-primary (negative lookbehind/ahead for existing replace)
+    newContent = newContent.replace(/(?<!-)text-white(?!\/)/g, 'text-text-primary');
+
+    // 4. text-black -> text-bg-primary (usually inside inverted buttons)
+    newContent = newContent.replace(/(?<!-)text-black(?!\/)/g, 'text-bg-primary');
+
+    // 5. bg-white/XX -> bg-text-primary/XX (or surface-primary depending on context, keeping simple overlay)
+    newContent = newContent.replace(/bg-white\/(0[.]?[0-9]*|[1-9][0-9]*)/g, 'bg-text-primary/$1');
+
+    // 6. bg-white -> bg-text-primary
+    newContent = newContent.replace(/(?<!-)bg-white(?!\/)/g, 'bg-text-primary');
+
+    // 7. bg-black -> bg-bg-primary 
+    newContent = newContent.replace(/(?<!-)bg-black(?!\/)/g, 'bg-bg-primary');
+
+    // 8. border-white/XX -> border-border-primary
+    // (border-primary automatically handles opacity in our index.css rgba)
+    newContent = newContent.replace(/border-white\/([0-9]+)/g, 'border-border-primary');
+
+    if (content !== newContent) {
+        fs.writeFileSync(file, newContent, 'utf8');
+        totalReplacements++;
+        console.log(`Updated: ${path.relative(srcDir, file)}`);
+    }
+}
+
+console.log(`\nSuccessfully applied theme replacements to ${totalReplacements} files.`);
