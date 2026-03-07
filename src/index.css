@@ -30,7 +30,6 @@
   --border-primary: rgba(255, 255, 255, 0.05);
   --surface-primary: rgba(255, 255, 255, 0.02);
   --grid-color: #ffffff;
-  --grid-opacity: 0.03;
 }
 
 @layer base {

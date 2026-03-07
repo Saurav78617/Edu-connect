@@ -23,9 +23,8 @@ export default function GridBackground() {
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
       {/* Static Grid */}
       <div
-        className="absolute inset-0 transition-opacity duration-300"
+        className="absolute inset-0 opacity-[0.03]"
         style={{
-          opacity: 'var(--grid-opacity)',
           backgroundImage: `linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px)`,
           backgroundSize: '40px 40px'
         }}
@@ -33,7 +32,7 @@ export default function GridBackground() {
 
       {/* Hardware-Accelerated Interactive Reveal Glow */}
       <motion.div
-        className="absolute w-[800px] h-[800px] rounded-full pointer-events-none opacity-100"
+        className="absolute w-[800px] h-[800px] rounded-full pointer-events-none mix-blend-screen opacity-100"
         style={{
           background: 'radial-gradient(circle, rgba(249, 115, 22, 0.35) 0%, transparent 50%)',
           x: useTransform(x, v => v - 400), // Offset by half width to center on cursor
