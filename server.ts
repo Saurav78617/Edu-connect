@@ -75,7 +75,7 @@ async function seedMentors() {
 async function startServer() {
   const app = express();
   app.use(express.json());
-  const PORT = 3000;
+  const PORT = parseInt(process.env.PORT || "3000", 10);
 
   await seedMentors();
 
@@ -472,6 +472,12 @@ async function startServer() {
       appType: "spa",
     });
     app.use(vite.middlewares);
+  } else {
+    // Serve static files in production
+    app.use(express.static("dist"));
+    app.get("*", (req, res) => {
+      res.sendFile(process.cwd() + "/dist/index.html");
+    });
   }
 
   app.listen(PORT, "0.0.0.0", () => {
