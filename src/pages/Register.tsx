@@ -182,19 +182,25 @@ export default function Register() {
             </AnimatePresence>
 
             <form onSubmit={handleSubmit} className="space-y-10">
-              {/* Role Selection */}
-              <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4 p-1.5 bg-surface-primary rounded-2xl border border-border-primary">
+              {/* Sleek Pill Role Selection */}
+              <motion.div variants={itemVariants} className="relative flex p-1.5 bg-white/[0.03] backdrop-blur-xl rounded-2xl border border-white/10 w-full max-w-md mx-auto">
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'STUDENT' })}
-                  className={`py - 5 rounded - xl flex items - center justify - center gap - 3 text - [10px] font - bold uppercase tracking - widest transition - all duration - 500 ${formData.role === 'STUDENT' ? 'bg-text-primary text-bg-primary shadow-[0_10px_20px_rgba(0,0,0,0.1)]' : 'text-text-primary/30 hover:text-text-primary'} `}
+                  className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all duration-500 z-10 ${formData.role === 'STUDENT'
+                      ? 'bg-text-primary text-bg-primary shadow-[0_4px_20px_rgba(255,255,255,0.1)]'
+                      : 'text-text-primary/40 hover:text-text-primary/80'
+                    }`}
                 >
                   <User size={16} /> Student
                 </button>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'MENTOR' })}
-                  className={`py - 5 rounded - xl flex items - center justify - center gap - 3 text - [10px] font - bold uppercase tracking - widest transition - all duration - 500 ${formData.role === 'MENTOR' ? 'bg-text-primary text-bg-primary shadow-[0_10px_20px_rgba(0,0,0,0.1)]' : 'text-text-primary/30 hover:text-text-primary'} `}
+                  className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all duration-500 z-10 ${formData.role === 'MENTOR'
+                      ? 'bg-text-primary text-bg-primary shadow-[0_4px_20px_rgba(255,255,255,0.1)]'
+                      : 'text-text-primary/40 hover:text-text-primary/80'
+                    }`}
                 >
                   <Briefcase size={16} /> Mentor
                 </button>
