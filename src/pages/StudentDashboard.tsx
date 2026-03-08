@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Sparkles, Calendar, LogOut, CheckCircle, CreditCard, X, User, Star, Filter, ArrowUpRight, Clock, Shield, MessageSquare } from 'lucide-react';
+import { Search, BookOpen, Calendar, MessageSquare, Star, CheckCircle, XCircle, Mail, Zap, ArrowRight, TrendingUp, CreditCard, X, Sparkles, Smartphone, ShieldCheck, ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import NotificationBell from '../components/NotificationBell';
 import ThemeToggle from '../components/ThemeToggle';
@@ -122,6 +122,10 @@ export default function StudentDashboard() {
 
   const confirmBooking = async () => {
     setIsBooking(true);
+
+    // Simulate Razorpay Gateway Delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
     try {
       await api.post('/sessions/book', {
         mentorId: selectedMentor?.id,
@@ -134,7 +138,7 @@ export default function StudentDashboard() {
       setTimeout(() => setBookingSuccess(false), 3000);
     } catch (err) {
       console.error(err);
-      alert('Failed to book session. Please try again.');
+      alert('Payment processing failed. Please try again.');
     } finally {
       setIsBooking(false);
     }
@@ -673,11 +677,40 @@ export default function StudentDashboard() {
                 </div>
 
                 <div className="space-y-6">
-                  <div className="flex items-center gap-5 p-6 rounded-2xl border border-border-primary bg-white/[0.01]">
-                    <CreditCard className="text-brand-accent/40" size={24} />
-                    <div className="space-y-1">
-                      <p className="text-[8px] font-bold uppercase tracking-widest text-text-primary/20">Demo Card</p>
-                      <p className="font-mono text-sm text-text-primary/60 tracking-wider">•••• •••• •••• 4242</p>
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-text-primary/40 block mb-2">Select Payment Method</label>
+
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center gap-4 p-5 rounded-2xl border border-brand-accent/50 bg-brand-accent/5 relative overflow-hidden">
+                        <div className="w-10 h-10 rounded-xl bg-brand-accent/20 flex items-center justify-center">
+                          <Smartphone className="text-brand-accent" size={20} />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-bold uppercase tracking-widest text-text-primary">UPI / QR Code</p>
+                          <p className="font-mono text-[10px] text-text-primary/40 mt-1 tracking-wider">Google Pay, PhonePe, Paytm</p>
+                        </div>
+                        <CheckCircle size={18} className="text-brand-accent" />
+                      </div>
+
+                      <div className="flex items-center gap-4 p-5 rounded-2xl border border-border-primary bg-white/[0.01] opacity-50 cursor-not-allowed">
+                        <div className="w-10 h-10 rounded-xl bg-surface-primary flex items-center justify-center">
+                          <CreditCard className="text-text-primary/40" size={20} />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-bold uppercase tracking-widest text-text-primary/60">Debit / Credit Card</p>
+                          <p className="font-mono text-[10px] text-text-primary/30 mt-1 tracking-wider">Visa, Mastercard, RuPay</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 space-y-3">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-text-primary/40 block">Enter UPI ID</label>
+                      <input
+                        type="text"
+                        placeholder="example@okicici"
+                        defaultValue="student@paytm"
+                        className="w-full bg-surface-primary border border-border-primary rounded-xl px-4 py-3 text-sm text-text-primary outline-none focus:border-brand-accent transition-colors font-mono"
+                      />
                     </div>
                   </div>
 
@@ -694,7 +727,10 @@ export default function StudentDashboard() {
                   </button>
                 </div>
 
-                <p className="text-[8px] uppercase tracking-[0.4em] text-text-primary/10 text-center font-mono">Secure Payment Powered by BridgePay</p>
+                <div className="flex items-center justify-center gap-2 text-text-primary/20">
+                  <ShieldCheck size={14} className="text-emerald-500/50" />
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-bold">Secured by Razorpay™ Demo</p>
+                </div>
               </div>
             </motion.div>
           </div>
