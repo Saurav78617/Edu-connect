@@ -242,14 +242,21 @@ export default function Login() {
                   <div className="relative flex items-center">
                     <Lock className="absolute left-0 text-text-primary/10 group-focus-within:text-brand-accent transition-all duration-500" size={20} />
                     <input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       required
                       autoComplete="current-password"
-                      className="w-full bg-transparent border-b border-border-primary py-4 pl-10 pr-4 text-text-primary outline-none focus:border-brand-accent transition-all duration-500 placeholder:text-text-primary/10 font-light text-lg"
+                      className="w-full bg-transparent border-b border-border-primary py-4 pl-10 pr-12 text-text-primary outline-none focus:border-brand-accent transition-all duration-500 placeholder:text-text-primary/10 font-light text-lg"
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-0 text-text-primary/20 hover:text-brand-accent transition-colors"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
                     <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />
                   </div>
                 </motion.div>
