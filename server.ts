@@ -329,7 +329,7 @@ async function startServer() {
         return res.status(403).json({ message: "Only students can leave reviews" });
       }
 
-      const session = db.prepare("SELECT * FROM sessions WHERE id = ? AND studentId = ?").get(sessionId) as any;
+      const session = db.prepare("SELECT * FROM sessions WHERE id = ? AND studentId = ?").get(sessionId, studentId) as any;
       if (!session) return res.status(404).json({ message: "Session not found" });
 
       db.prepare("INSERT INTO reviews (sessionId, studentId, mentorId, rating, comment) VALUES (?, ?, ?, ?, ?)")
