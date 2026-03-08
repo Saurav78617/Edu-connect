@@ -52,7 +52,7 @@ export default function Register() {
     try {
       await api.post('/auth/register', {
         ...formData,
-        email: formData.email.toLowerCase(),
+        email: formData.email.trim().toLowerCase(),
         skills: formData.skills.split(',').map(s => s.trim()).filter(s => s),
         experienceYears: formData.experienceYears ? parseInt(formData.experienceYears) : undefined,
         hourlyRate: formData.role === 'MENTOR' ? (formData.hourlyRate ? parseFloat(formData.hourlyRate) : 0) : undefined
@@ -188,8 +188,8 @@ export default function Register() {
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'STUDENT' })}
                   className={`relative flex-1 flex items-center justify-center gap-3 py-4 text-[12px] font-medium uppercase tracking-[0.2em] transition-colors duration-300 z-10 ${formData.role === 'STUDENT'
-                      ? 'text-black font-semibold'
-                      : 'text-white/40 hover:text-white/80'
+                    ? 'text-black font-semibold'
+                    : 'text-white/40 hover:text-white/80'
                     }`}
                 >
                   {formData.role === 'STUDENT' && (
@@ -205,8 +205,8 @@ export default function Register() {
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'MENTOR' })}
                   className={`relative flex-1 flex items-center justify-center gap-3 py-4 text-[12px] font-medium uppercase tracking-[0.2em] transition-colors duration-300 z-10 ${formData.role === 'MENTOR'
-                      ? 'text-black font-semibold'
-                      : 'text-white/40 hover:text-white/80'
+                    ? 'text-black font-semibold'
+                    : 'text-white/40 hover:text-white/80'
                     }`}
                 >
                   {formData.role === 'MENTOR' && (

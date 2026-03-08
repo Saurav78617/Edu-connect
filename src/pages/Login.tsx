@@ -47,7 +47,7 @@ export default function Login() {
     setError('');
     try {
       const res = await api.post('/auth/login', {
-        email: email.toLowerCase(),
+        email: email.trim().toLowerCase(),
         password
       });
       login(res.data.token, res.data.user);
