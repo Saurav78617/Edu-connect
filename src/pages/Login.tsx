@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'motion/react';
-import { ArrowRight, Mail, Lock, Sparkles, ShieldCheck, Fingerprint, X, Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Mail, Lock, Sparkles, ShieldCheck, Fingerprint, X, Eye, EyeOff } from 'lucide-react';
 import GridBackground from '../components/GridBackground';
 
 export default function Login() {
@@ -175,6 +175,11 @@ export default function Login() {
         >
           <div className="flex-1 flex flex-col justify-center overflow-y-auto pr-4 space-y-12 custom-scrollbar">
             <div className="space-y-4">
+              <Link to="/" className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/40 hover:text-brand-accent transition-colors mb-4 block w-fit">
+                <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+                Return to Home
+              </Link>
+              <br />
               <motion.div
                 variants={itemVariants}
                 className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-text-primary/5 border border-border-primary text-text-primary/60 text-[10px] font-bold uppercase tracking-widest"
