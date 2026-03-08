@@ -236,6 +236,31 @@ async function startServer() {
     }
   });
 
+  app.put("/api/sessions/:id/complete", authenticateToken, (req: AuthRequest, res, next) => {
+    try {
+      const { id } = req.params;
+      const mentorId = req.user?.id;
+
+      if (req.user?.role !== 'MENTOR') {
+        return res.status(403).json({ message: "Only mentors can complete sessions" });
+      }
+
+      const session = db.prepare("SELECT * FROM sessions WHERE id = ? AND mentorId = ?").get(id, mentorId) as any;
+      if (!session) {
+        return res.status(404).json({ message: "Session not found or unauthorized" });
+      }
+
+      db.prepare("UPDATE sessions SET completedAt = CURRENT_TIMESTAMP WHERE id = ?").run(id);
+
+      // Notify student
+      createNotification(session.studentId, "Session Completed", `Your session with ${req.user!.email} has been marked as completed. Please leave a review!`);
+
+      res.json({ message: "Session marked as completed" });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   app.put("/api/sessions/:id/cancel", authenticateToken, (req: AuthRequest, res, next) => {
     try {
       const { id } = req.params;

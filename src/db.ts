@@ -110,5 +110,6 @@ const checkAndAddColumn = (table: string, column: string, definition: string) =>
 checkAndAddColumn('sessions', 'price', 'REAL');
 checkAndAddColumn('users', 'city', 'TEXT');
 checkAndAddColumn('sessions', 'mode', "TEXT CHECK(mode IN ('online', 'offline')) DEFAULT 'online'");
+checkAndAddColumn('sessions', 'completedAt', 'TEXT');
 
 export default db;
