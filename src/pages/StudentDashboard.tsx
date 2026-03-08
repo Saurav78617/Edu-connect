@@ -96,34 +96,8 @@ export default function StudentDashboard() {
     if (!interests || mentors.length === 0) return;
     setMatching(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-      const prompt = `
-        You are an expert career matching AI. 
-        Student Interests: "${interests}"
-        
-        Available Mentors:
-        ${mentors.map(m => `ID: ${m.id}, Skills: ${m.skills.join(', ')}, Bio: ${m.bio}, Exp: ${m.experienceYears} years`).join('\n')}
-        
-        Based on the student's interests and the mentors' profiles, select the top 3 best matches.
-        Return ONLY a JSON array of mentor IDs in order of relevance.
-        Example: [5, 2, 8]
-      `;
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
-      });
-
-      const text = response.text || "[]";
-      let matchIds: number[] = [];
-      try {
-        const match = text.match(/\[.*\]/);
-        if (match) {
-          matchIds = JSON.parse(match[0]);
-        }
-      } catch (e) {
-        console.error("Failed to parse AI response:", e);
-      }
+      const res = await api.post('/mentors/match', { interests, mentors });
+      const matchIds = res.data.matchIds || [];
 
       const matchedMentors = mentors.filter(m => matchIds.includes(m.id));
       // Sort mentors based on the order in matchIds

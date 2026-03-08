@@ -405,6 +405,52 @@ async function startServer() {
     }
   });
 
+  app.post("/api/mentors/match", authenticateToken, async (req: AuthRequest, res, next) => {
+    try {
+      const { interests, mentors } = req.body;
+      if (!interests || !mentors || mentors.length === 0) {
+        return res.status(400).json({ message: "Interests and mentors are required for matching." });
+      }
+
+      if (!ai) {
+        return res.status(503).json({ message: "AI matching service is unavailable (Missing API Key)." });
+      }
+
+      const prompt = `
+        You are an expert career matching AI. 
+        Student Interests: "${interests}"
+        
+        Available Mentors:
+        ${mentors.map((m: any) => `ID: ${m.id}, Skills: ${m.skills.join(', ')}, Bio: ${m.bio}, Exp: ${m.experienceYears} years`).join('\n')}
+        
+        Based on the student's interests and the mentors' profiles, select the top 3 best matches.
+        Return ONLY a JSON array of mentor IDs in order of relevance.
+        Example: [5, 2, 8]
+      `;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+      });
+
+      const text = response.text || "[]";
+      let matchIds: number[] = [];
+      try {
+        const match = text.match(/\[.*\]/);
+        if (match) {
+          matchIds = JSON.parse(match[0]);
+        }
+      } catch (e) {
+        console.error("Failed to parse AI response:", e);
+      }
+
+      res.json({ matchIds });
+    } catch (error) {
+      console.error("AI Match Error:", error);
+      res.status(500).json({ message: "Failed to generate AI match sequence" });
+    }
+  });
+
   app.post("/api/messages/:sessionId", authenticateToken, (req: AuthRequest, res, next) => {
     try {
       const { sessionId } = req.params;
