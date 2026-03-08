@@ -18,9 +18,10 @@ interface Mentor {
 interface Props {
     isOpen: boolean;
     onClose: () => void;
+    onBookingComplete?: () => void;
 }
 
-export default function HybridBookingModal({ isOpen, onClose }: Props) {
+export default function HybridBookingModal({ isOpen, onClose, onBookingComplete }: Props) {
     const { user } = useAuth();
     const [mode, setMode] = useState<'online' | 'offline'>('online');
     const [mentors, setMentors] = useState<Mentor[]>([]);
@@ -73,6 +74,7 @@ export default function HybridBookingModal({ isOpen, onClose }: Props) {
             });
 
             alert('Session Booked successfully!');
+            if (onBookingComplete) onBookingComplete();
             onClose();
         } catch (error) {
             console.error('Booking failed', error);
@@ -190,8 +192,8 @@ export default function HybridBookingModal({ isOpen, onClose }: Props) {
                                             key={mentor.id}
                                             onClick={() => setSelectedMentor(mentor.id)}
                                             className={`cursor-pointer group p-6 rounded-2xl border transition-all duration-300 ${selectedMentor === mentor.id
-                                                    ? 'border-brand-accent bg-brand-accent/5'
-                                                    : 'border-border-primary bg-white/[0.02] hover:bg-white/[0.04]'
+                                                ? 'border-brand-accent bg-brand-accent/5'
+                                                : 'border-border-primary bg-white/[0.02] hover:bg-white/[0.04]'
                                                 }`}
                                         >
                                             <div className="flex justify-between items-start mb-4">
