@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'motion/react';
-import { User, Briefcase, ArrowRight, Mail, Lock, Sparkles, UserCircle, Fingerprint, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Mail, Lock, Sparkles, ShieldCheck, Fingerprint, X, User, Briefcase, ChevronRight, Eye, EyeOff, UserCircle } from 'lucide-react';
 import GridBackground from '../components/GridBackground';
 
 export default function Register() {
@@ -153,9 +153,14 @@ export default function Register() {
         >
           <div className="flex-1 flex flex-col overflow-y-auto pr-4 space-y-12 custom-scrollbar">
             <div className="space-y-4">
+              <Link to="/" className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/40 hover:text-brand-accent transition-colors mb-4 block w-fit">
+                <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+                Return to Home
+              </Link>
+              <br />
               <motion.div
                 variants={itemVariants}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-primary border border-border-primary text-text-primary/60 text-[10px] font-bold uppercase tracking-widest"
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-text-primary/5 border border-border-primary text-text-primary/60 text-[10px] font-bold uppercase tracking-widest"
               >
                 <Sparkles size={12} className="text-brand-accent" />
                 New Node Entry
@@ -185,14 +190,14 @@ export default function Register() {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'STUDENT' })}
-                  className={`py-5 rounded-xl flex items-center justify-center gap-3 text-[10px] font-bold uppercase tracking-widest transition-all duration-500 ${formData.role === 'STUDENT' ? 'bg-text-primary text-bg-primary shadow-[0_10px_20px_rgba(0,0,0,0.1)]' : 'text-text-primary/30 hover:text-text-primary'}`}
+                  className={`py - 5 rounded - xl flex items - center justify - center gap - 3 text - [10px] font - bold uppercase tracking - widest transition - all duration - 500 ${formData.role === 'STUDENT' ? 'bg-text-primary text-bg-primary shadow-[0_10px_20px_rgba(0,0,0,0.1)]' : 'text-text-primary/30 hover:text-text-primary'} `}
                 >
                   <User size={16} /> Student
                 </button>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'MENTOR' })}
-                  className={`py-5 rounded-xl flex items-center justify-center gap-3 text-[10px] font-bold uppercase tracking-widest transition-all duration-500 ${formData.role === 'MENTOR' ? 'bg-text-primary text-bg-primary shadow-[0_10px_20px_rgba(0,0,0,0.1)]' : 'text-text-primary/30 hover:text-text-primary'}`}
+                  className={`py - 5 rounded - xl flex items - center justify - center gap - 3 text - [10px] font - bold uppercase tracking - widest transition - all duration - 500 ${formData.role === 'MENTOR' ? 'bg-text-primary text-bg-primary shadow-[0_10px_20px_rgba(0,0,0,0.1)]' : 'text-text-primary/30 hover:text-text-primary'} `}
                 >
                   <Briefcase size={16} /> Mentor
                 </button>
