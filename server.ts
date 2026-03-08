@@ -324,20 +324,35 @@ async function startServer() {
     try {
       const { sessionId, rating, comment } = req.body;
       const studentId = req.user?.id;
+      console.log(`[Review Submission] Request from student ${studentId} for session ${sessionId}. Rating: ${rating}`);
 
       if (req.user?.role !== 'STUDENT') {
+        console.log(`[Review Submission Failed] User is not a student (Role: ${req.user?.role})`);
         return res.status(403).json({ message: "Only students can leave reviews" });
       }
 
       const session = db.prepare("SELECT * FROM sessions WHERE id = ? AND studentId = ?").get(sessionId, studentId) as any;
-      if (!session) return res.status(404).json({ message: "Session not found" });
+      if (!session) {
+        console.log(`[Review Submission Failed] Session ${sessionId} not found for student ${studentId}`);
+        return res.status(404).json({ message: "Session not found or does not belong to you" });
+      }
 
+      // Check if review already exists
+      const existingReview = db.prepare("SELECT * FROM reviews WHERE sessionId = ? AND studentId = ?").get(sessionId, studentId);
+      if (existingReview) {
+        console.log(`[Review Submission Failed] Review already exists for session ${sessionId} by student ${studentId}`);
+        return res.status(400).json({ message: "You have already reviewed this session" });
+      }
+
+      console.log(`[Review Submission] Inserting review. Mentor ID: ${session.mentorId}`);
       db.prepare("INSERT INTO reviews (sessionId, studentId, mentorId, rating, comment) VALUES (?, ?, ?, ?, ?)")
         .run(sessionId, studentId, session.mentorId, rating, comment);
 
+      console.log(`[Review Submission Success]`);
       res.status(201).json({ message: "Review submitted" });
     } catch (error) {
-      next(error);
+      console.error("[Review Submission Error]:", error);
+      res.status(500).json({ message: "Internal server error during review submission." });
     }
   });
 
