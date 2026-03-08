@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'motion/react';
 import { ArrowRight, Users, Sparkles, ShieldCheck, Fingerprint, Globe, Cpu, Zap } from 'lucide-react';
 import GridBackground from '../components/GridBackground';
+import FloatingNav from '../components/FloatingNav';
 
 export default function Landing() {
   const { scrollYProgress } = useScroll();
@@ -31,22 +32,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary selection:bg-brand-accent/30 overflow-x-hidden">
       <GridBackground />
-
-      {/* Navigation Header */}
-      <header className="fixed top-0 left-0 right-0 z-[100] px-6 md:px-12 py-5 flex items-center justify-between bg-bg-primary/40 backdrop-blur-xl border-b border-border-primary">
-        <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 bg-text-primary rounded-xl flex items-center justify-center text-bg-primary font-serif italic font-bold group-hover:scale-105 transition-transform">EC</div>
-          <span className="text-xl font-serif italic font-bold tracking-tight hidden sm:block">Edu <span className="text-brand-accent">Connect</span></span>
-        </Link>
-        <div className="flex items-center gap-4 sm:gap-6">
-          <Link to="/login" className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-text-primary/60 hover:text-text-primary hover:text-brand-accent transition-colors">
-            Login
-          </Link>
-          <Link to="/register" className="px-5 py-2.5 rounded-full bg-text-primary text-bg-primary text-[10px] sm:text-xs font-bold uppercase tracking-widest hover:bg-brand-accent hover:text-text-primary transition-all duration-500">
-            Join Platform
-          </Link>
-        </div>
-      </header>
+      <FloatingNav />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-20">
