@@ -181,6 +181,9 @@ export default function StudentDashboard() {
     return matchesSkill && matchesExp;
   });
 
+  const activeSessions = sessions.filter(s => s.status === 'PENDING' || (s.status === 'CONFIRMED' && new Date(s.scheduledAt).getTime() > Date.now() - 3600000));
+  const historySessions = sessions.filter(s => s.status === 'CANCELLED' || s.status === 'COMPLETED' || (s.status === 'CONFIRMED' && new Date(s.scheduledAt).getTime() <= Date.now() - 3600000));
+
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary selection:bg-brand-accent/30 overflow-x-hidden">
       <GridBackground />
@@ -419,13 +422,13 @@ export default function StudentDashboard() {
               </div>
 
               <div className="space-y-6">
-                {sessions.length === 0 ? (
+                {activeSessions.length === 0 ? (
                   <div className="p-12 rounded-[32px] border border-dashed border-border-primary flex flex-col items-center justify-center text-center space-y-4">
                     <Calendar className="text-text-primary/10" size={40} />
                     <p className="text-text-primary/20 text-sm font-light italic">No active sessions found.</p>
                   </div>
                 ) : (
-                  sessions.map(session => (
+                  activeSessions.map(session => (
                     <motion.div
                       key={session.id}
                       initial={{ opacity: 0, x: 20 }}
