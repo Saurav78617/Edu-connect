@@ -183,26 +183,40 @@ export default function Register() {
 
             <form onSubmit={handleSubmit} className="space-y-10">
               {/* Sleek Pill Role Selection */}
-              <motion.div variants={itemVariants} className="relative flex p-1.5 bg-white/[0.03] backdrop-blur-xl rounded-2xl border border-white/10 w-full max-w-md mx-auto">
+              <motion.div variants={itemVariants} className="relative flex p-1.5 bg-[#141414] rounded-2xl w-full max-w-md mx-auto border border-white/5 shadow-inner">
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'STUDENT' })}
-                  className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all duration-500 z-10 ${formData.role === 'STUDENT'
-                      ? 'bg-text-primary text-bg-primary shadow-[0_4px_20px_rgba(255,255,255,0.1)]'
-                      : 'text-text-primary/40 hover:text-text-primary/80'
+                  className={`relative flex-1 flex items-center justify-center gap-3 py-4 text-[12px] font-medium uppercase tracking-[0.2em] transition-colors duration-300 z-10 ${formData.role === 'STUDENT'
+                      ? 'text-black font-semibold'
+                      : 'text-white/40 hover:text-white/80'
                     }`}
                 >
-                  <User size={16} /> Student
+                  {formData.role === 'STUDENT' && (
+                    <motion.div
+                      layoutId="role-indicator"
+                      className="absolute inset-0 bg-white rounded-[14px] shadow-sm z-[-1]"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <User size={18} className="z-10" strokeWidth={1.5} /> <span className="z-10">STUDENT</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'MENTOR' })}
-                  className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all duration-500 z-10 ${formData.role === 'MENTOR'
-                      ? 'bg-text-primary text-bg-primary shadow-[0_4px_20px_rgba(255,255,255,0.1)]'
-                      : 'text-text-primary/40 hover:text-text-primary/80'
+                  className={`relative flex-1 flex items-center justify-center gap-3 py-4 text-[12px] font-medium uppercase tracking-[0.2em] transition-colors duration-300 z-10 ${formData.role === 'MENTOR'
+                      ? 'text-black font-semibold'
+                      : 'text-white/40 hover:text-white/80'
                     }`}
                 >
-                  <Briefcase size={16} /> Mentor
+                  {formData.role === 'MENTOR' && (
+                    <motion.div
+                      layoutId="role-indicator"
+                      className="absolute inset-0 bg-white rounded-[14px] shadow-sm z-[-1]"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <Briefcase size={18} className="z-10" strokeWidth={1.5} /> <span className="z-10">MENTOR</span>
                 </button>
               </motion.div>
 
