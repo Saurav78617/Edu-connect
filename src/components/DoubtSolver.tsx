@@ -10,7 +10,11 @@ interface Message {
     text: string;
 }
 
-export default function DoubtSolver() {
+interface Props {
+    onBookingComplete?: () => void;
+}
+
+export default function DoubtSolver({ onBookingComplete }: Props) {
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
@@ -88,16 +92,16 @@ export default function DoubtSolver() {
                     >
                         <div className={`flex gap-4 max-w-[80%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${msg.sender === 'user'
-                                    ? 'bg-text-primary/10 border-text-primary/20'
-                                    : 'bg-brand-accent/10 border-brand-accent/30'
+                                ? 'bg-text-primary/10 border-text-primary/20'
+                                : 'bg-brand-accent/10 border-brand-accent/30'
                                 }`}>
                                 {msg.sender === 'user' ? <User size={14} className="text-text-primary/60" /> : <Bot size={14} className="text-brand-accent" />}
                             </div>
 
                             <div className={`space-y-4 ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
                                 <div className={`p-4 rounded-2xl text-sm leading-relaxed ${msg.sender === 'user'
-                                        ? 'bg-text-primary text-bg-primary rounded-tr-none'
-                                        : 'bg-white/5 text-text-primary/80 border border-border-primary rounded-tl-none'
+                                    ? 'bg-text-primary text-bg-primary rounded-tr-none'
+                                    : 'bg-white/5 text-text-primary/80 border border-border-primary rounded-tl-none'
                                     }`}>
                                     {msg.text}
                                 </div>
@@ -156,7 +160,7 @@ export default function DoubtSolver() {
                 </form>
             </div>
 
-            <HybridBookingModal isOpen={showModal} onClose={() => setShowModal(false)} />
+            <HybridBookingModal isOpen={showModal} onClose={() => setShowModal(false)} onBookingComplete={onBookingComplete} />
         </div>
     );
 }

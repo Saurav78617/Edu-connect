@@ -275,12 +275,11 @@ export default function StudentDashboard() {
                 </button>
               </div>
             </div>
-          ) : (
-            <div className="max-w-4xl mx-auto text-left">
-              <DoubtSolver />
-            </div>
-          )}
-        </section>
+          ) : <div className="max-w-4xl mx-auto">
+            {activeTab === 'doubt' && (
+              <DoubtSolver onBookingComplete={fetchSessions} />
+            )}
+          </div>       </section>
 
         {/* Masterclass Circles */}
         {masterclasses.length > 0 && (
