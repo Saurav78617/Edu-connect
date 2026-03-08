@@ -3,12 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'motion/react';
-import { ArrowRight, Mail, Lock, Sparkles, ShieldCheck, Fingerprint, X } from 'lucide-react';
+import { ArrowRight, Mail, Lock, Sparkles, ShieldCheck, Fingerprint, X, Eye, EyeOff } from 'lucide-react';
 import GridBackground from '../components/GridBackground';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
