@@ -6,6 +6,7 @@ interface User {
   email: string;
   role: 'STUDENT' | 'MENTOR';
   skills: string[];
+  city?: string;
 }
 
 interface AuthContextType {

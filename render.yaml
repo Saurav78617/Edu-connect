@@ -4,17 +4,17 @@ services:
     env: node
     plan: free
     buildCommand: npm install && npm run build
-    startCommand: npm start
-    disk:
-      name: sqlite-data
-      mountPath: /data
-      sizeGB: 1
+    startCommand: npm run start
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
       - key: DB_PATH
         value: /data/bridge.db
       - key: JWT_SECRET
         generateValue: true
+      - key: GEMINI_API_KEY
+        value: "" # Please fill this in the Render dashboard
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1

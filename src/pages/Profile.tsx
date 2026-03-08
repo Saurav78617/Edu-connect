@@ -132,14 +132,25 @@ export default function Profile() {
                     />
                   </div>
                   <div className="space-y-4 group">
-                    <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20">Email (Read-only)</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20 group-focus-within:text-brand-accent transition-colors">Base City Location</label>
                     <input
-                      type="email"
-                      disabled
-                      className="w-full bg-transparent border-b border-border-primary py-4 text-text-primary/20 outline-none font-light cursor-not-allowed"
-                      value={profile.email}
+                      type="text"
+                      className="w-full bg-transparent border-b border-border-primary py-4 text-text-primary outline-none focus:border-brand-accent transition-all placeholder:text-text-primary/5 font-light"
+                      value={profile.city || ''}
+                      placeholder="e.g. Mumbai, New York"
+                      onChange={(e) => setProfile({ ...profile, city: e.target.value })}
                     />
                   </div>
+                </div>
+
+                <div className="space-y-4 group">
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20">Email (Read-only)</label>
+                  <input
+                    type="email"
+                    disabled
+                    className="w-full bg-transparent border-b border-border-primary py-4 text-text-primary/20 outline-none font-light cursor-not-allowed"
+                    value={profile.email}
+                  />
                 </div>
 
                 {profile.role === 'MENTOR' && (

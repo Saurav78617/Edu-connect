@@ -5,11 +5,14 @@ import db from "./src/db.ts";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { authenticateToken, AuthRequest } from "./src/middleware/auth.ts";
+import { GoogleGenAI } from "@google/genai";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
   throw new Error("FATAL ERROR: JWT_SECRET environment variable is missing.");
 }
+
+const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null;
 
 async function seedMentors() {
   try {
@@ -103,7 +106,7 @@ async function startServer() {
 
   // --- AUTH ROUTES ---
   app.post("/api/auth/register", async (req, res, next) => {
-    const { name, email, password, role, skills, experienceYears, hourlyRate, bio } = req.body;
+    const { name, email, password, role, skills, experienceYears, hourlyRate, bio, city } = req.body;
     if (!name || !email || !password || !role) {
       return res.status(400).json({ message: "Missing required fields" });
     }
@@ -111,10 +114,10 @@ async function startServer() {
     try {
       const passwordHash = await bcrypt.hash(password, 10);
       const stmt = db.prepare(`
-        INSERT INTO users (name, email, passwordHash, role, skills, experienceYears, hourlyRate, bio)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO users (name, email, passwordHash, role, skills, experienceYears, hourlyRate, bio, city)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
-      const result = stmt.run(name, normalizedEmail, passwordHash, role, JSON.stringify(skills || []), experienceYears || null, hourlyRate || null, bio || "");
+      const result = stmt.run(name, normalizedEmail, passwordHash, role, JSON.stringify(skills || []), experienceYears || null, hourlyRate || null, bio || "", city || null);
       res.status(201).json({ id: result.lastInsertRowid, message: "User registered successfully" });
     } catch (error: any) {
       if (error?.message?.includes("UNIQUE constraint failed")) {
@@ -167,22 +170,33 @@ async function startServer() {
 
   // --- MENTOR ROUTES ---
   app.get("/api/mentors", async (req, res) => {
-    const mentors = db.prepare("SELECT id, name, email, role, skills, experienceYears, hourlyRate, bio FROM users WHERE role = 'MENTOR' AND isAvailable = 1").all();
+    const mentors = db.prepare("SELECT id, name, email, role, skills, experienceYears, hourlyRate, bio, city FROM users WHERE role = 'MENTOR' AND isAvailable = 1").all();
+    res.json(mentors.map((m: any) => ({ ...m, skills: JSON.parse(m.skills || "[]") })));
+  });
+
+  app.get("/api/mentors/search", async (req, res) => {
+    const { city } = req.query;
+    if (!city) {
+      return res.status(400).json({ message: "City parameter is required" });
+    }
+    const mentors = db.prepare("SELECT id, name, email, role, skills, experienceYears, hourlyRate, bio, city FROM users WHERE role = 'MENTOR' AND isAvailable = 1 AND LOWER(city) = LOWER(?)").all(city);
     res.json(mentors.map((m: any) => ({ ...m, skills: JSON.parse(m.skills || "[]") })));
   });
 
   // --- SESSION ROUTES ---
   app.post("/api/sessions/book", authenticateToken, (req: AuthRequest, res, next) => {
     try {
-      const { mentorId, scheduledAt, price } = req.body;
+      const { mentorId, scheduledAt, price, mode } = req.body;
       const studentId = req.user?.id;
 
       if (req.user?.role !== 'STUDENT') {
         return res.status(403).json({ message: "Only students can book sessions" });
       }
 
-      const stmt = db.prepare("INSERT INTO sessions (studentId, mentorId, scheduledAt, price) VALUES (?, ?, ?, ?)");
-      const result = stmt.run(studentId, mentorId, scheduledAt, price);
+      const sessionMode = mode === 'offline' ? 'offline' : 'online';
+
+      const stmt = db.prepare("INSERT INTO sessions (studentId, mentorId, scheduledAt, price, mode) VALUES (?, ?, ?, ?, ?)");
+      const result = stmt.run(studentId, mentorId, scheduledAt, price, sessionMode);
 
       // Notify mentor
       const student = db.prepare("SELECT name FROM users WHERE id = ?").get(studentId) as any;
@@ -366,6 +380,31 @@ async function startServer() {
     }
   });
 
+  // --- AI CHAT ROUTE ---
+  app.post("/api/chat", authenticateToken, async (req: AuthRequest, res, next) => {
+    try {
+      const { prompt } = req.body;
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+
+      if (!ai) {
+        // Fallback dummy response if no API key is set
+        return res.json({ response: "AI features are currently offline. Please escalate to a human mentor." });
+      }
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `You are a helpful, concise AI mentor on 'The Bridge' platform. Help the student with their doubt: ${prompt}`,
+      });
+
+      res.json({ response: response.text });
+    } catch (error) {
+      console.error("AI Chat Error:", error);
+      res.status(500).json({ message: "Failed to generate AI response" });
+    }
+  });
+
   app.post("/api/messages/:sessionId", authenticateToken, (req: AuthRequest, res, next) => {
     try {
       const { sessionId } = req.params;
@@ -388,7 +427,7 @@ async function startServer() {
         FROM messages m
         JOIN users u ON m.senderId = u.id
         WHERE m.id = ?
-      `).get(result.lastInsertRowid);
+        `).get(result.lastInsertRowid);
 
       // Identify recipient
       const recipientId = session.studentId === senderId ? session.mentorId : session.studentId;
@@ -440,7 +479,7 @@ async function startServer() {
          JOIN users u ON m.mentorId = u.id
          WHERE datetime(m.scheduledDate) >= datetime('now')
          ORDER BY m.scheduledDate ASC
-       `).all();
+        `).all();
       res.json(masterclasses);
     } catch (error) {
       next(error);

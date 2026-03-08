@@ -98,11 +98,17 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_enrollments_masterclassId ON enrollments(masterclassId);
 `);
 
-// Migration: Add price column to sessions if it doesn't exist
-const tableInfo = db.prepare("PRAGMA table_info(sessions)").all() as any[];
-const hasPrice = tableInfo.some(col => col.name === 'price');
-if (!hasPrice) {
-  db.exec("ALTER TABLE sessions ADD COLUMN price REAL");
-}
+// Migrations
+const checkAndAddColumn = (table: string, column: string, definition: string) => {
+  const tableInfo = db.prepare(`PRAGMA table_info(${table})`).all() as any[];
+  const hasColumn = tableInfo.some(col => col.name === column);
+  if (!hasColumn) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+};
+
+checkAndAddColumn('sessions', 'price', 'REAL');
+checkAndAddColumn('users', 'city', 'TEXT');
+checkAndAddColumn('sessions', 'mode', "TEXT CHECK(mode IN ('online', 'offline')) DEFAULT 'online'");
 
 export default db;

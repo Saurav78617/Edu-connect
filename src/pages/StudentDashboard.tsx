@@ -9,6 +9,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import { GoogleGenAI } from "@google/genai";
 import GridBackground from '../components/GridBackground';
 import ChatModal from '../components/ChatModal';
+import DoubtSolver from '../components/DoubtSolver';
 
 interface Mentor {
   id: number;
@@ -42,6 +43,7 @@ interface Masterclass {
 export default function StudentDashboard() {
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [activeTab, setActiveTab] = useState<'match' | 'doubt'>('match');
   const [interests, setInterests] = useState('');
   const [matching, setMatching] = useState(false);
   const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
@@ -245,31 +247,52 @@ export default function StudentDashboard() {
             </p>
           </div>
 
-          <div className="max-w-3xl mx-auto relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-brand-accent to-orange-600 rounded-[30px] blur opacity-20 group-focus-within:opacity-40 transition duration-1000" />
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Describe your ambition... e.g. I want to build a career in sustainable tech leadership."
-                className="w-full bg-surface-primary text-text-primary px-8 py-7 rounded-[28px] border border-border-primary outline-none focus:border-brand-accent/50 transition-all pr-40 text-lg font-light placeholder:text-text-primary/20"
-                value={interests}
-                onChange={(e) => setInterests(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAIMatch()}
-              />
-              <button
-                onClick={handleAIMatch}
-                disabled={matching}
-                className="absolute right-3 top-3 bottom-3 bg-text-primary text-bg-primary px-8 rounded-2xl font-bold flex items-center gap-3 hover:bg-brand-accent hover:text-text-primary transition-all duration-500 disabled:opacity-50 group/btn"
-              >
-                {matching ? 'Matching...' : (
-                  <>
-                    <span className="text-xs uppercase tracking-widest">Match</span>
-                    <ArrowUpRight size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                  </>
-                )}
-              </button>
-            </div>
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <button
+              onClick={() => setActiveTab('match')}
+              className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'match' ? 'bg-text-primary text-bg-primary' : 'bg-surface-primary text-text-primary/40 hover:text-text-primary'}`}
+            >
+              Find Architect
+            </button>
+            <button
+              onClick={() => setActiveTab('doubt')}
+              className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'doubt' ? 'bg-brand-accent text-bg-primary' : 'bg-surface-primary text-text-primary/40 hover:text-text-primary'}`}
+            >
+              AI Doubt Solver
+            </button>
           </div>
+
+          {activeTab === 'match' ? (
+            <div className="max-w-3xl mx-auto relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-brand-accent to-orange-600 rounded-[30px] blur opacity-20 group-focus-within:opacity-40 transition duration-1000" />
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Describe your ambition... e.g. I want to build a career in sustainable tech leadership."
+                  className="w-full bg-surface-primary text-text-primary px-8 py-7 rounded-[28px] border border-border-primary outline-none focus:border-brand-accent/50 transition-all pr-40 text-lg font-light placeholder:text-text-primary/20"
+                  value={interests}
+                  onChange={(e) => setInterests(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAIMatch()}
+                />
+                <button
+                  onClick={handleAIMatch}
+                  disabled={matching}
+                  className="absolute right-3 top-3 bottom-3 bg-text-primary text-bg-primary px-8 rounded-2xl font-bold flex items-center gap-3 hover:bg-brand-accent hover:text-text-primary transition-all duration-500 disabled:opacity-50 group/btn"
+                >
+                  {matching ? 'Matching...' : (
+                    <>
+                      <span className="text-xs uppercase tracking-widest">Match</span>
+                      <ArrowUpRight size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="max-w-4xl mx-auto text-left">
+              <DoubtSolver />
+            </div>
+          )}
         </section>
 
         {/* Masterclass Circles */}
@@ -713,6 +736,6 @@ export default function StudentDashboard() {
           />
         )}
       </AnimatePresence>
-    </div>
+    </div >
   );
 }

@@ -12,6 +12,7 @@ export default function Register() {
     password: '',
     role: 'STUDENT',
     skills: '',
+    city: '',
     experienceYears: '',
     bio: '',
     hourlyRate: ''
@@ -287,19 +288,35 @@ export default function Register() {
                 )}
               </div>
 
-              <motion.div variants={itemVariants} className="relative group">
-                <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20 mb-4 group-focus-within:text-brand-accent transition-all">
-                  Skills (comma separated)
-                </label>
-                <input
-                  type="text"
-                  className="w-full bg-transparent border-b border-border-primary py-4 text-text-primary outline-none focus:border-brand-accent transition-all placeholder:text-text-primary/5 font-light"
-                  placeholder="React, Python, Design..."
-                  value={formData.skills}
-                  onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
-                />
-                <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />
-              </motion.div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <motion.div variants={itemVariants} className="relative group">
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20 mb-4 group-focus-within:text-brand-accent transition-all">
+                    Base City Location
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full bg-transparent border-b border-border-primary py-4 text-text-primary outline-none focus:border-brand-accent transition-all placeholder:text-text-primary/5 font-light"
+                    placeholder="e.g. Mumbai, New York..."
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  />
+                  <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />
+                </motion.div>
+
+                <motion.div variants={itemVariants} className="relative group">
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20 mb-4 group-focus-within:text-brand-accent transition-all">
+                    Skills (comma separated)
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full bg-transparent border-b border-border-primary py-4 text-text-primary outline-none focus:border-brand-accent transition-all placeholder:text-text-primary/5 font-light"
+                    placeholder="React, Python, Design..."
+                    value={formData.skills}
+                    onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+                  />
+                  <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />
+                </motion.div>
+              </div>
 
               <motion.div variants={itemVariants} className="relative group">
                 <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20 mb-4 group-focus-within:text-brand-accent transition-all">
