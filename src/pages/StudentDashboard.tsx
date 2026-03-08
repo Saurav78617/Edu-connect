@@ -549,8 +549,8 @@ export default function StudentDashboard() {
 
               <div className="space-y-8">
                 <div className="space-y-2">
-                  <h3 className="text-3xl font-serif text-text-primary italic">Leave Feedback</h3>
-                  <p className="text-text-primary/40 text-sm">Your insight helps the architect refine their craft.</p>
+                  <h3 className="text-xl font-serif text-text-primary mt-2">Rate your Session</h3>
+                  <p className="text-text-primary/40 text-sm">Your insight helps the mentor refine their craft.</p>
                 </div>
 
                 <div className="flex gap-3 justify-center">
