@@ -224,7 +224,7 @@ async function startServer() {
         return res.status(404).json({ message: "Session not found or unauthorized" });
       }
 
-      const meetLink = `https://meet.google.com/${Math.random().toString(36).substring(2, 5)}-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 5)}`;
+      const meetLink = `https://meet.jit.si/EduConnect-${Math.random().toString(36).substring(2, 12)}`;
       db.prepare("UPDATE sessions SET status = 'CONFIRMED', meetLink = ? WHERE id = ?").run(meetLink, id);
 
       // Notify student
