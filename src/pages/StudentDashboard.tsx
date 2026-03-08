@@ -243,7 +243,7 @@ export default function StudentDashboard() {
               Find your <span className="italic text-brand-accent">Architect</span>.
             </h2>
             <p className="max-w-xl mx-auto text-text-primary/30 text-lg font-light">
-              Connect with the architects of industry who have built the paths you wish to walk.
+              Connect with the mentors of industry who have built the paths you wish to walk.
             </p>
           </div>
 
@@ -252,7 +252,7 @@ export default function StudentDashboard() {
               onClick={() => setActiveTab('match')}
               className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'match' ? 'bg-text-primary text-bg-primary' : 'bg-surface-primary text-text-primary/40 hover:text-text-primary'}`}
             >
-              Find Architect
+              Find Mentor
             </button>
             <button
               onClick={() => setActiveTab('doubt')}
