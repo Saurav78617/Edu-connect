@@ -223,7 +223,7 @@ export default function StudentDashboard() {
 
           <div className="space-y-4">
             <h2 className="text-6xl md:text-8xl font-serif font-light tracking-tighter leading-none">
-              Find your <span className="italic text-brand-accent">Architect</span>.
+              Find your <span className="italic text-brand-accent">Mentor</span>.
             </h2>
             <p className="max-w-xl mx-auto text-text-primary/30 text-lg font-light">
               Connect with the mentors of industry who have built the paths you wish to walk.
