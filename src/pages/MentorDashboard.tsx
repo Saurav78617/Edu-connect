@@ -220,46 +220,151 @@ export default function MentorDashboard() {
                 )}
               </div>
             ) : (
-              <div className="space-y-6">
-                {activeSessions.length === 0 ? (
-                  <div className="p-20 rounded-[40px] border border-dashed border-border-primary flex flex-col items-center justify-center text-center space-y-6">
-                    <Calendar className="text-text-primary/5" size={64} />
-                    <p className="text-text-primary/20 text-lg font-light italic">No active sessions right now.</p>
-                  </div>
-                ) : (
-                  activeSessions.map((session) => (
-                    <motion.div
-                      key={session.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="group p-8 rounded-[32px] border border-border-primary bg-surface-primary hover:bg-brand-accent/[0.02] transition-all duration-700 flex flex-col md:flex-row md:items-center justify-between gap-8"
-                    >
-                      <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 bg-surface-primary rounded-2xl border border-border-primary flex items-center justify-center text-brand-accent font-serif italic font-bold text-2xl group-hover:scale-110 transition-transform duration-500">
-                          {session.studentName.charAt(0)}
-                        </div>
-                        <div className="space-y-1">
-                          <h4 className="text-2xl font-serif text-text-primary">{session.studentName}</h4>
-                          <p className="text-xs text-text-primary/30 font-light">{session.studentEmail}</p>
-                          <div className="pt-2 flex items-center gap-3">
-                            <span className={`text-[8px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border ${session.status === 'CONFIRMED' ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5' :
-                              session.status === 'PENDING' ? 'border-orange-500/20 text-orange-500 bg-orange-500/5' : 'border-red-500/20 text-red-500 bg-red-500/5'
-                              }`}>
-                              {session.status}
-                            </span>
-                            <span className="text-[10px] font-bold text-brand-accent font-mono">₹{session.price || 0}.00</span>
+              <div className="space-y-12">
+                <div className="space-y-6">
+                  {activeSessions.length === 0 ? (
+                    <div className="p-20 rounded-[40px] border border-dashed border-border-primary flex flex-col items-center justify-center text-center space-y-6">
+                      <Calendar className="text-text-primary/5" size={64} />
+                      <p className="text-text-primary/20 text-lg font-light italic">No active sessions right now.</p>
+                    </div>
+                  ) : (
+                    activeSessions.map((session) => (
+                      <motion.div
+                        key={session.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="group p-8 rounded-[32px] border border-border-primary bg-surface-primary hover:bg-brand-accent/[0.02] transition-all duration-700 flex flex-col md:flex-row md:items-center justify-between gap-8"
+                      >
+                        <div className="flex items-center gap-6">
+                          <div className="w-16 h-16 bg-surface-primary rounded-2xl border border-border-primary flex items-center justify-center text-brand-accent font-serif italic font-bold text-2xl group-hover:scale-110 transition-transform duration-500">
+                            {session.studentName.charAt(0)}
+                          </div>
+                          <div className="space-y-1">
+                            <h4 className="text-2xl font-serif text-text-primary">{session.studentName}</h4>
+                            <p className="text-xs text-text-primary/30 font-light">{session.studentEmail}</p>
+                            <div className="pt-2 flex items-center gap-3">
+                              <span className={`text-[8px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border ${session.status === 'CONFIRMED' ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5' :
+                                session.status === 'PENDING' ? 'border-orange-500/20 text-orange-500 bg-orange-500/5' : 'border-red-500/20 text-red-500 bg-red-500/5'
+                                }`}>
+                                {session.status}
+                              </span>
+                              <span className="text-[10px] font-bold text-brand-accent font-mono">₹{session.price || 0}.00</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="flex flex-col md:items-end gap-6">
-                        <div className="flex items-center gap-3 text-text-primary/40">
-                          <Clock size={16} className="text-brand-accent/40" />
-                          <span className="text-xs font-mono">{new Date(session.scheduledAt).toLocaleString()}</span>
+                        <div className="flex flex-col md:items-end gap-6">
+                          <div className="flex items-center gap-3 text-text-primary/40">
+                            <Clock size={16} className="text-brand-accent/40" />
+                            <span className="text-xs font-mono">{new Date(session.scheduledAt).toLocaleString()}</span>
+                          </div>
+
+                          <div className="flex items-center gap-4">
+                            {session.status === 'CONFIRMED' && (
+                              <button
+                                onClick={() => setActiveChat({ id: session.id, name: session.studentName })}
+                                className="p-4 rounded-2xl border border-border-primary text-text-primary/40 hover:text-brand-accent hover:border-brand-accent/30 transition-all flex items-center justify-center"
+                                title="Open Chat"
+                              >
+                                <MessageSquare size={20} />
+                              </button>
+                            )}
+
+                            {session.status === 'PENDING' && (
+                              <>
+                                <button
+                                  onClick={() => handleCancel(session.id)}
+                                  disabled={loadingActionId === session.id}
+                                  className="p-4 rounded-2xl border border-border-primary text-text-primary/20 hover:text-red-500 hover:border-red-500/20 transition-all disabled:opacity-50"
+                                  title="Cancel Session"
+                                >
+                                  {loadingActionId === session.id ? <div className="w-5 h-5 border-2 border-text-primary/20 border-t-red-500 rounded-full animate-spin" /> : <XCircle size={20} />}
+                                </button>
+                                <button
+                                  onClick={() => handleConfirm(session.id)}
+                                  disabled={loadingActionId === session.id}
+                                  className="min-w-[120px] px-8 py-4 rounded-2xl bg-text-primary text-bg-primary font-bold text-[10px] uppercase tracking-widest hover:bg-brand-accent hover:text-text-primary transition-all duration-500 flex items-center justify-center gap-3 disabled:opacity-50"
+                                >
+                                  {loadingActionId === session.id ? (
+                                    <>Processing <div className="w-3 h-3 border-2 border-bg-primary border-t-transparent rounded-full animate-spin" /></>
+                                  ) : (
+                                    <><CheckCircle size={18} /> Confirm</>
+                                  )}
+                                </button>
+                              </>
+                            )}
+                            {session.status === 'CONFIRMED' && (
+                              <>
+                                <button
+                                  onClick={() => handleComplete(session.id)}
+                                  disabled={loadingActionId === session.id}
+                                  className="px-6 py-4 rounded-2xl border border-emerald-500/30 text-emerald-500 font-bold text-[10px] uppercase tracking-widest hover:bg-emerald-500/10 transition-all duration-500 flex items-center gap-2 disabled:opacity-50"
+                                >
+                                  {loadingActionId === session.id ? <div className="w-4 h-4 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" /> : <CheckCircle size={16} />}
+                                  Complete
+                                </button>
+                                <a
+                                  href={session.meetLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-8 py-4 rounded-2xl bg-emerald-600 text-text-primary font-bold text-[10px] uppercase tracking-widest hover:bg-emerald-500 transition-all duration-500 flex items-center gap-3"
+                                >
+                                  <Video size={18} /> Join Meet
+                                </a>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
+                </div>
+
+                {/* Session History Section */}
+                <div className="border-b border-border-primary pb-8 pt-12">
+                  <h3 className="text-3xl font-serif italic">History</h3>
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-text-primary/20">Completed & Past Sessions</p>
+                </div>
+
+                <div className="space-y-6 mt-8">
+                  {historySessions.length === 0 ? (
+                    <div className="p-12 rounded-[32px] border border-dashed border-border-primary flex flex-col items-center justify-center text-center space-y-4">
+                      <Clock className="text-text-primary/10" size={40} />
+                      <p className="text-text-primary/20 text-sm font-light italic">Your session history is empty.</p>
+                    </div>
+                  ) : (
+                    historySessions.map((session) => (
+                      <motion.div
+                        key={`hist-${session.id}`}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="group p-8 rounded-[32px] border border-border-primary bg-surface-primary/50 opacity-80 hover:opacity-100 transition-all duration-700 flex flex-col md:flex-row md:items-center justify-between gap-8"
+                      >
+                        <div className="flex items-center gap-6">
+                          <div className="w-16 h-16 bg-surface-primary rounded-2xl border border-border-primary flex items-center justify-center text-brand-accent font-serif italic font-bold text-2xl">
+                            {session.studentName.charAt(0)}
+                          </div>
+                          <div className="space-y-1">
+                            <h4 className="text-2xl font-serif text-text-primary">{session.studentName}</h4>
+                            <p className="text-xs text-text-primary/30 font-light">{session.studentEmail}</p>
+                            <div className="pt-2 flex items-center gap-3">
+                              <span className={`text-[8px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border ${session.completedAt || session.status === 'CONFIRMED' ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5' :
+                                session.status === 'PENDING' ? 'border-orange-500/20 text-orange-500 bg-orange-500/5' : 'border-red-500/20 text-red-500 bg-red-500/5'
+                                }`}>
+                                {session.completedAt || session.status === 'CONFIRMED' ? 'COMPLETED' : session.status}
+                              </span>
+                              <span className="text-[10px] font-bold text-brand-accent font-mono">₹{session.price || 0}.00</span>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
-                          {session.status === 'CONFIRMED' && (
+                        <div className="flex flex-col md:items-end gap-6">
+                          <div className="flex items-center gap-3 text-text-primary/40">
+                            <Clock size={16} className="text-brand-accent/40" />
+                            <span className="text-xs font-mono">{new Date(session.scheduledAt).toLocaleString()}</span>
+                          </div>
+
+                          <div className="flex items-center gap-4">
                             <button
                               onClick={() => setActiveChat({ id: session.id, name: session.studentName })}
                               className="p-4 rounded-2xl border border-border-primary text-text-primary/40 hover:text-brand-accent hover:border-brand-accent/30 transition-all flex items-center justify-center"
@@ -267,116 +372,13 @@ export default function MentorDashboard() {
                             >
                               <MessageSquare size={20} />
                             </button>
-                          )}
-
-                          {session.status === 'PENDING' && (
-                            <>
-                              <button
-                                onClick={() => handleCancel(session.id)}
-                                disabled={loadingActionId === session.id}
-                                className="p-4 rounded-2xl border border-border-primary text-text-primary/20 hover:text-red-500 hover:border-red-500/20 transition-all disabled:opacity-50"
-                                title="Cancel Session"
-                              >
-                                {loadingActionId === session.id ? <div className="w-5 h-5 border-2 border-text-primary/20 border-t-red-500 rounded-full animate-spin" /> : <XCircle size={20} />}
-                              </button>
-                              <button
-                                onClick={() => handleConfirm(session.id)}
-                                disabled={loadingActionId === session.id}
-                                className="min-w-[120px] px-8 py-4 rounded-2xl bg-text-primary text-bg-primary font-bold text-[10px] uppercase tracking-widest hover:bg-brand-accent hover:text-text-primary transition-all duration-500 flex items-center justify-center gap-3 disabled:opacity-50"
-                              >
-                                {loadingActionId === session.id ? (
-                                  <>Processing <div className="w-3 h-3 border-2 border-bg-primary border-t-transparent rounded-full animate-spin" /></>
-                                ) : (
-                                  <><CheckCircle size={18} /> Confirm</>
-                                )}
-                              </button>
-                            </>
-                          )}
-                          {session.status === 'CONFIRMED' && (
-                            <>
-                              <button
-                                onClick={() => handleComplete(session.id)}
-                                disabled={loadingActionId === session.id}
-                                className="px-6 py-4 rounded-2xl border border-emerald-500/30 text-emerald-500 font-bold text-[10px] uppercase tracking-widest hover:bg-emerald-500/10 transition-all duration-500 flex items-center gap-2 disabled:opacity-50"
-                              >
-                                {loadingActionId === session.id ? <div className="w-4 h-4 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" /> : <CheckCircle size={16} />}
-                                Complete
-                              </button>
-                              <a
-                                href={session.meetLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="px-8 py-4 rounded-2xl bg-emerald-600 text-text-primary font-bold text-[10px] uppercase tracking-widest hover:bg-emerald-500 transition-all duration-500 flex items-center gap-3"
-                              >
-                                <Video size={18} /> Join Meet
-                              </a>
-                            </>
-                          )}
+                          </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))
-                )}
-              </div>
-
-              {/* Session History Section */}
-            <div className="border-b border-border-primary pb-8 pt-12">
-              <h3 className="text-3xl font-serif italic">History</h3>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-text-primary/20">Completed & Past Sessions</p>
-            </div>
-
-            <div className="space-y-6 mt-8">
-              {historySessions.length === 0 ? (
-                <div className="p-12 rounded-[32px] border border-dashed border-border-primary flex flex-col items-center justify-center text-center space-y-4">
-                  <Clock className="text-text-primary/10" size={40} />
-                  <p className="text-text-primary/20 text-sm font-light italic">Your session history is empty.</p>
+                      </motion.div>
+                    ))
+                  )}
                 </div>
-              ) : (
-                historySessions.map((session) => (
-                  <motion.div
-                    key={`hist-${session.id}`}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="group p-8 rounded-[32px] border border-border-primary bg-surface-primary/50 opacity-80 hover:opacity-100 transition-all duration-700 flex flex-col md:flex-row md:items-center justify-between gap-8"
-                  >
-                    <div className="flex items-center gap-6">
-                      <div className="w-16 h-16 bg-surface-primary rounded-2xl border border-border-primary flex items-center justify-center text-brand-accent font-serif italic font-bold text-2xl">
-                        {session.studentName.charAt(0)}
-                      </div>
-                      <div className="space-y-1">
-                        <h4 className="text-2xl font-serif text-text-primary">{session.studentName}</h4>
-                        <p className="text-xs text-text-primary/30 font-light">{session.studentEmail}</p>
-                        <div className="pt-2 flex items-center gap-3">
-                          <span className={`text-[8px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border ${session.completedAt || session.status === 'CONFIRMED' ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5' :
-                            session.status === 'PENDING' ? 'border-orange-500/20 text-orange-500 bg-orange-500/5' : 'border-red-500/20 text-red-500 bg-red-500/5'
-                            }`}>
-                            {session.completedAt || session.status === 'CONFIRMED' ? 'COMPLETED' : session.status}
-                          </span>
-                          <span className="text-[10px] font-bold text-brand-accent font-mono">₹{session.price || 0}.00</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col md:items-end gap-6">
-                      <div className="flex items-center gap-3 text-text-primary/40">
-                        <Clock size={16} className="text-brand-accent/40" />
-                        <span className="text-xs font-mono">{new Date(session.scheduledAt).toLocaleString()}</span>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <button
-                          onClick={() => setActiveChat({ id: session.id, name: session.studentName })}
-                          className="p-4 rounded-2xl border border-border-primary text-text-primary/40 hover:text-brand-accent hover:border-brand-accent/30 transition-all flex items-center justify-center"
-                          title="Open Chat"
-                        >
-                          <MessageSquare size={20} />
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))
-              )}
-            </div>
+              </div>
             )}
           </div>
 
