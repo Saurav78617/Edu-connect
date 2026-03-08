@@ -2,7 +2,12 @@ import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, BookOpen, Calendar, MessageSquare, Star, CheckCircle, XCircle, Mail, Zap, ArrowRight, TrendingUp, CreditCard, X, Sparkles, Smartphone, ShieldCheck, ArrowUpRight } from 'lucide-react';
+import {
+  Search, BookOpen, Calendar, MessageSquare, Star, CheckCircle,
+  XCircle, Mail, Zap, ArrowRight, TrendingUp, CreditCard, X,
+  Sparkles, Smartphone, ShieldCheck, ArrowUpRight,
+  User, LogOut, Filter, Clock, Shield
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import NotificationBell from '../components/NotificationBell';
 import ThemeToggle from '../components/ThemeToggle';
