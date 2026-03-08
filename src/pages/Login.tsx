@@ -140,7 +140,7 @@ export default function Login() {
                   Edu <span className="text-brand-accent">Connect</span>
                 </h1>
                 <p className="text-text-primary/30 text-xs uppercase tracking-[0.6em] font-medium">
-                  The Architecture of Knowledge
+                  The Mentorship of Knowledge
                 </p>
               </motion.div>
             </div>

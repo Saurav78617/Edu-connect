@@ -58,7 +58,7 @@ export default function Landing() {
             </motion.h1>
 
             <motion.p variants={itemVariants} className="max-w-xl mx-auto text-lg md:text-xl text-text-primary/40 font-light leading-relaxed">
-              Connecting the next generation of talent with the architects of industry.
+              Connecting the next generation of talent with the mentors of industry.
               A bridge between legacy and potential.
             </motion.p>
 
@@ -125,7 +125,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto space-y-20">
           <div className="flex flex-col md:flex-row justify-between items-end gap-8">
             <h2 className="text-6xl md:text-8xl font-serif font-light tracking-tighter leading-none">
-              The <span className="italic bg-gradient-to-r from-brand-accent to-orange-400 bg-clip-text text-transparent">Architecture</span> <br />
+              The <span className="italic bg-gradient-to-r from-brand-accent to-orange-400 bg-clip-text text-transparent">Mentorship</span> <br />
               of Success.
             </h2>
             <p className="max-w-sm text-text-primary/30 text-sm leading-relaxed">
