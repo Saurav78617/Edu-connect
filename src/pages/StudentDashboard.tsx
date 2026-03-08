@@ -484,6 +484,66 @@ export default function StudentDashboard() {
                   ))
                 )}
               </div>
+
+              {/* Session History Section */}
+              <div className="border-b border-border-primary pb-8 pt-6">
+                <h3 className="text-3xl font-serif italic">History</h3>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-text-primary/20">Completed & Past Sessions</p>
+              </div>
+
+              <div className="space-y-6">
+                {historySessions.length === 0 ? (
+                  <div className="p-12 rounded-[32px] border border-dashed border-border-primary flex flex-col items-center justify-center text-center space-y-4">
+                    <Clock className="text-text-primary/10" size={40} />
+                    <p className="text-text-primary/20 text-sm font-light italic">Your session history is empty.</p>
+                  </div>
+                ) : (
+                  historySessions.map(session => (
+                    <motion.div
+                      key={`history-${session.id}`}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="p-6 rounded-3xl border border-border-primary bg-surface-primary/50 hover:bg-surface-primary hover:border-brand-accent/20 transition-all duration-500 space-y-6 opacity-80 hover:opacity-100"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <h4 className="text-lg font-serif italic text-text-primary">{session.mentorName}</h4>
+                          <div className="flex items-center gap-2 text-[10px] text-text-primary/30 font-mono">
+                            <Clock size={12} />
+                            {new Date(session.scheduledAt).toLocaleString()}
+                          </div>
+                          <div className="text-[10px] font-bold text-brand-accent font-mono mt-1">₹{session.price || 0}.00</div>
+                        </div>
+                        <span className={`text-[8px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full border ${session.status === 'COMPLETED' || session.status === 'CONFIRMED' ? 'border-emerald-500/20 text-emerald-500 bg-emerald-500/5' :
+                          'border-text-primary/20 text-text-primary/40 bg-text-primary/5'
+                          }`}>
+                          {session.status === 'CONFIRMED' ? 'COMPLETED' : session.status}
+                        </span>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => setActiveChat({ id: session.id, name: session.mentorName })}
+                          className="p-3 rounded-xl border border-border-primary text-text-primary/40 hover:text-brand-accent hover:border-brand-accent/30 transition-all flex items-center justify-center relative"
+                          title="Open Chat History"
+                        >
+                          <MessageSquare size={16} />
+                        </button>
+
+                        {(session.status === 'COMPLETED' || session.status === 'CONFIRMED') && (
+                          <button
+                            onClick={() => setShowReview(session.id)}
+                            className="p-3 rounded-xl border border-border-primary text-text-primary/40 hover:text-brand-accent hover:border-brand-accent/30 transition-all"
+                            title="Leave a Review"
+                          >
+                            <Star size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
             </div>
 
             {/* System Stats / Info */}
