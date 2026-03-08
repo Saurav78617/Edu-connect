@@ -32,6 +32,7 @@ interface Session {
   status: string;
   meetLink?: string;
   price?: number;
+  completedAt?: string;
 }
 
 interface Masterclass {
@@ -181,8 +182,8 @@ export default function StudentDashboard() {
     return matchesSkill && matchesExp;
   });
 
-  const activeSessions = sessions.filter(s => s.status === 'PENDING' || (s.status === 'CONFIRMED' && new Date(s.scheduledAt).getTime() > Date.now() - 3600000));
-  const historySessions = sessions.filter(s => s.status === 'CANCELLED' || s.status === 'COMPLETED' || (s.status === 'CONFIRMED' && new Date(s.scheduledAt).getTime() <= Date.now() - 3600000));
+  const activeSessions = sessions.filter(s => s.status === 'PENDING' || (s.status === 'CONFIRMED' && !s.completedAt && new Date(s.scheduledAt).getTime() > Date.now() - 3600000));
+  const historySessions = sessions.filter(s => s.status === 'CANCELLED' || s.status === 'COMPLETED' || s.completedAt || (s.status === 'CONFIRMED' && new Date(s.scheduledAt).getTime() <= Date.now() - 3600000));
 
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary selection:bg-brand-accent/30 overflow-x-hidden">
