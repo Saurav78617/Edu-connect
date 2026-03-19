@@ -13,6 +13,7 @@ import CustomCursor from './components/CustomCursor';
 import PageLoader from './components/PageLoader';
 import BackgroundOrbs from './components/BackgroundOrbs';
 import { useState, useEffect } from 'react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 const ProtectedRoute = ({ children, role }: { children: React.ReactNode, role?: string }) => {
   const { isAuthenticated, user } = useAuth();
@@ -80,6 +81,7 @@ export default function App() {
             </AnimatePresence>
             <CustomCursor />
             <AnimatedRoutes />
+            <SpeedInsights />
           </div>
         </Router>
       </ThemeProvider>
