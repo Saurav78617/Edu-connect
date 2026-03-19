@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { Bell, CheckCircle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { getSocket, disconnectSocket } from '../utils/socket';
 
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -13,37 +14,20 @@ export default function NotificationBell() {
     // Initial fetch
     fetchNotifications();
 
-    // SSE Connection setup
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    // Socket.io Connection setup
+    const socket = getSocket();
+    if (!socket) return;
 
-    // Use absolute URL using window.location.origin
-    const eventSource = new EventSource(`/api/notifications/stream?token=${token}`);
-
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'connected') return;
-
-        // Data is an array of new notifications
-        if (Array.isArray(data)) {
-          setNotifications(prev => [...data, ...prev]);
-          data.forEach(notification => {
-            showToast(notification);
-          });
-        }
-      } catch (err) {
-        console.error("Error parsing SSE data", err);
-      }
+    const handleNotification = (data: any) => {
+      setNotifications(prev => [data, ...prev]);
+      showToast(data);
     };
 
-    eventSource.onerror = (err) => {
-      console.error("EventSource failed:", err);
-      eventSource.close();
-    };
+    socket.on('notification', handleNotification);
 
     return () => {
-      eventSource.close();
+      socket.off('notification', handleNotification);
+      // We don't disconnectSocket() here because other components (like Chat) might be using it.
     };
   }, []);
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Search, BookOpen, Calendar, MessageSquare, Star, CheckCircle,
@@ -27,6 +28,7 @@ interface Mentor {
 
 interface Session {
   id: number;
+  mentorId: number;
   mentorName: string;
   scheduledAt: string;
   status: string;
@@ -48,6 +50,8 @@ interface Masterclass {
 
 export default function StudentDashboard() {
   const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [activeTab, setActiveTab] = useState<'match' | 'doubt'>('match');
   const [interests, setInterests] = useState('');
@@ -57,33 +61,56 @@ export default function StudentDashboard() {
   const [adjustedPrice, setAdjustedPrice] = useState(0);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [showReview, setShowReview] = useState<number | null>(null);
-  const [activeChat, setActiveChat] = useState<{ id: number; name: string } | null>(null);
+  const [activeChat, setActiveChat] = useState<{ id: number; participantId: number; name: string } | null>(null);
   const [reviewData, setReviewData] = useState({ rating: 5, comment: '' });
   const [filter, setFilter] = useState({ skill: '', minExp: 0 });
   const [isBooking, setIsBooking] = useState(false);
   const [masterclasses, setMasterclasses] = useState<Masterclass[]>([]);
+  const [mcPage, setMcPage] = useState(1);
+  const [mcHasMore, setMcHasMore] = useState(true);
   const [enrollingClassId, setEnrollingClassId] = useState<number | null>(null);
   const { user, logout } = useAuth();
+  const { showToast } = useToast();
 
   useEffect(() => {
-    fetchMentors();
+    fetchMentors(1);
     fetchSessions();
     fetchMasterclasses();
   }, []);
 
-  const fetchMasterclasses = async () => {
+  const fetchMasterclasses = async (pageNum: number = 1) => {
     try {
-      const res = await api.get('/masterclasses');
-      setMasterclasses(res.data);
+      const res = await api.get(`/masterclasses?page=${pageNum}&limit=4`);
+      const newData = res.data.data || [];
+      const meta = res.data.meta || {};
+
+      if (pageNum === 1) {
+        setMasterclasses(newData);
+      } else {
+        setMasterclasses(prev => [...prev, ...newData]);
+      }
+      
+      setMcHasMore(pageNum < meta.totalPages);
+      setMcPage(pageNum);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const fetchMentors = async () => {
+  const fetchMentors = async (pageNum: number = 1) => {
     try {
-      const res = await api.get('/mentors');
-      setMentors(res.data);
+      const res = await api.get(`/mentors?page=${pageNum}&limit=6`);
+      const newData = res.data.data || [];
+      const meta = res.data.meta || {};
+
+      if (pageNum === 1) {
+        setMentors(newData);
+      } else {
+        setMentors(prev => [...prev, ...newData]);
+      }
+      
+      setHasMore(pageNum < meta.totalPages);
+      setPage(pageNum);
     } catch (err) {
       console.error(err);
     }
@@ -114,7 +141,7 @@ export default function StudentDashboard() {
       }
     } catch (err) {
       console.error("AI Match Error:", err);
-      alert("AI matching failed. Please try again.");
+      showToast("AI matching failed. Please try again.", 'error');
     } finally {
       setMatching(false);
     }
@@ -129,23 +156,64 @@ export default function StudentDashboard() {
   const confirmBooking = async () => {
     setIsBooking(true);
 
-    // Simulate Razorpay Gateway Delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
     try {
-      await api.post('/sessions/book', {
+      const res = await api.post('/sessions/book', {
         mentorId: selectedMentor?.id,
         scheduledAt: new Date(Date.now() + 86400000).toISOString(),
         price: adjustedPrice
       });
-      setShowPayment(false);
-      setBookingSuccess(true);
-      fetchSessions();
-      setTimeout(() => setBookingSuccess(false), 3000);
+
+      const { orderId, amount, currency, id: sessionId } = res.data;
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || '', // Fallback empty if not set in .env
+        amount,
+        currency,
+        name: "Edu Connect",
+        description: `Mentorship Session with ${selectedMentor?.name}`,
+        order_id: orderId,
+        handler: async function (response: any) {
+          try {
+            setIsBooking(true);
+            await api.post('/sessions/verify-payment', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              sessionId
+            });
+
+            setShowPayment(false);
+            setBookingSuccess(true);
+            fetchSessions();
+            setTimeout(() => setBookingSuccess(false), 3000);
+          } catch (verificationError) {
+            console.error(verificationError);
+            showToast('Payment verification failed.', 'error');
+          } finally {
+            setIsBooking(false);
+          }
+        },
+        prefill: {
+          name: user?.name,
+          email: user?.email,
+          contact: "9999999999"
+        },
+        theme: {
+          color: "#ff6b00"
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        console.error(response.error.description);
+        showToast('Payment failed: ' + response.error.description, 'error');
+        setIsBooking(false);
+      });
+      rzp.open();
+
     } catch (err) {
       console.error(err);
-      alert('Payment processing failed. Please try again.');
-    } finally {
+      showToast('Failed to initialize payment. Please try again.', 'error');
       setIsBooking(false);
     }
   };
@@ -155,7 +223,7 @@ export default function StudentDashboard() {
       await api.post('/reviews', { sessionId, ...reviewData });
       setShowReview(null);
       setReviewData({ rating: 5, comment: '' });
-      alert('Review submitted! Thank you.');
+      showToast('Review submitted! Thank you.', 'success');
     } catch (err) {
       console.error(err);
     }
@@ -165,12 +233,12 @@ export default function StudentDashboard() {
     setEnrollingClassId(id);
     try {
       await api.post(`/masterclasses/${id}/enroll`);
-      alert("Successfully enrolled in Masterclass!");
+      showToast("Successfully enrolled in Masterclass!", 'success');
       fetchMasterclasses();
       fetchSessions();
     } catch (err: any) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to enroll. You might already be enrolled.");
+      showToast(err.response?.data?.message || "Failed to enroll. You might already be enrolled.", 'error');
     } finally {
       setEnrollingClassId(null);
     }
@@ -334,6 +402,17 @@ export default function StudentDashboard() {
                 </div>
               ))}
             </div>
+
+            {mcHasMore && masterclasses.length > 0 && (
+              <div className="flex justify-center mt-6">
+                 <button
+                   onClick={() => fetchMasterclasses(mcPage + 1)}
+                   className="px-8 py-3 rounded-xl border border-border-primary bg-surface-primary/50 text-text-primary/60 hover:text-text-primary hover:border-brand-accent/50 transition-all text-xs font-bold uppercase tracking-widest flex items-center gap-2"
+                 >
+                   Load More Masterclasses <ArrowRight size={14} />
+                 </button>
+              </div>
+            )}
           </section>
         )}
 
@@ -356,7 +435,7 @@ export default function StudentDashboard() {
                     onChange={(e) => setFilter({ ...filter, skill: e.target.value })}
                   />
                 </div>
-                <button onClick={fetchMentors} className="text-[10px] uppercase tracking-widest text-brand-accent/50 hover:text-brand-accent transition-colors">Reset</button>
+                <button onClick={() => { setFilter({ skill: '', minExp: 0 }); fetchMentors(1); }} className="text-[10px] uppercase tracking-widest text-brand-accent/50 hover:text-brand-accent transition-colors">Reset</button>
               </div>
             </div>
 
@@ -414,6 +493,17 @@ export default function StudentDashboard() {
                 </AnimatePresence>
               )}
             </div>
+
+            {hasMore && !matching && filter.skill === '' && filter.minExp === 0 && (
+              <div className="flex justify-center mt-12 w-full col-span-full">
+                <button
+                  onClick={() => fetchMentors(page + 1)}
+                  className="px-8 py-3 rounded-xl border border-border-primary bg-surface-primary/50 text-text-primary/60 hover:text-text-primary hover:border-brand-accent/50 transition-all text-xs font-bold uppercase tracking-widest flex items-center gap-2"
+                >
+                  Load More Mentors <ArrowRight size={14} />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Right Column - Sessions & Activity */}
@@ -467,7 +557,7 @@ export default function StudentDashboard() {
                         )}
 
                         <button
-                          onClick={() => setActiveChat({ id: session.id, name: session.mentorName })}
+                          onClick={() => setActiveChat({ id: session.id, participantId: session.mentorId, name: session.mentorName })}
                           className="p-3 rounded-xl border border-border-primary text-text-primary/40 hover:text-brand-accent hover:border-brand-accent/30 transition-all flex items-center justify-center relative"
                           title="Open Chat"
                         >
@@ -526,7 +616,7 @@ export default function StudentDashboard() {
 
                       <div className="flex gap-3">
                         <button
-                          onClick={() => setActiveChat({ id: session.id, name: session.mentorName })}
+                          onClick={() => setActiveChat({ id: session.id, participantId: session.mentorId, name: session.mentorName })}
                           className="p-3 rounded-xl border border-border-primary text-text-primary/40 hover:text-brand-accent hover:border-brand-accent/30 transition-all flex items-center justify-center relative"
                           title="Open Chat History"
                         >
@@ -752,15 +842,21 @@ export default function StudentDashboard() {
                     <label className="text-[10px] font-bold uppercase tracking-widest text-text-primary/40 block mb-2">Select Payment Method</label>
 
                     <div className="flex flex-col gap-3">
-                      <div className="flex items-center gap-4 p-5 rounded-2xl border border-brand-accent/50 bg-brand-accent/5 relative overflow-hidden">
-                        <div className="w-10 h-10 rounded-xl bg-brand-accent/20 flex items-center justify-center">
-                          <Smartphone className="text-brand-accent" size={20} />
+                      <div className="flex flex-col gap-4 p-5 rounded-2xl border border-brand-accent/50 bg-brand-accent/5 relative overflow-hidden">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-brand-accent/20 flex items-center justify-center">
+                            <Smartphone className="text-brand-accent" size={20} />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs font-bold uppercase tracking-widest text-text-primary">UPI / QR Code</p>
+                            <p className="font-mono text-[10px] text-text-primary/40 mt-1 tracking-wider">Google Pay, PhonePe, Paytm</p>
+                          </div>
+                          <CheckCircle size={18} className="text-brand-accent" />
                         </div>
-                        <div className="flex-1">
-                          <p className="text-xs font-bold uppercase tracking-widest text-text-primary">UPI / QR Code</p>
-                          <p className="font-mono text-[10px] text-text-primary/40 mt-1 tracking-wider">Google Pay, PhonePe, Paytm</p>
+                        
+                        <div className="w-full flex justify-center py-4 bg-white rounded-xl">
+                          <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=kumarsourabh11553-2@oksbi&pn=Saurav%20Rountaye&am=${adjustedPrice}&cu=INR`} alt="UPI QR Code" className="w-48 h-48 object-contain" />
                         </div>
-                        <CheckCircle size={18} className="text-brand-accent" />
                       </div>
 
                       <div className="flex items-center gap-4 p-5 rounded-2xl border border-border-primary bg-white/[0.01] opacity-50 cursor-not-allowed">
@@ -775,7 +871,7 @@ export default function StudentDashboard() {
                     </div>
 
                     <div className="pt-4 space-y-3">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-text-primary/40 block">Enter UPI ID</label>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-text-primary/40 block">Your UPI ID (For Verification)</label>
                       <input
                         type="text"
                         placeholder="example@okicici"
@@ -812,6 +908,7 @@ export default function StudentDashboard() {
         {activeChat && (
           <ChatModal
             sessionId={activeChat.id}
+            otherParticipantId={activeChat.participantId}
             otherParticipantName={activeChat.name}
             onClose={() => setActiveChat(null)}
           />

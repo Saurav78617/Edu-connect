@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { LogOut, CheckCircle, Video, Clock, User, XCircle, Star, Calendar, Shield, ArrowUpRight, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -11,6 +12,7 @@ import ChatModal from '../components/ChatModal';
 
 interface Session {
   id: number;
+  studentId: number;
   studentName: string;
   studentEmail: string;
   scheduledAt: string;
@@ -33,13 +35,14 @@ export default function MentorDashboard() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [showReviews, setShowReviews] = useState(false);
-  const [activeChat, setActiveChat] = useState<{ id: number; name: string } | null>(null);
+  const [activeChat, setActiveChat] = useState<{ id: number; participantId: number; name: string } | null>(null);
   const [loadingActionId, setLoadingActionId] = useState<number | null>(null);
   // Masterclass states
   const [showMasterclassModal, setShowMasterclassModal] = useState(false);
   const [masterclassForm, setMasterclassForm] = useState({ title: '', pricePerStudent: 500, scheduledDate: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, logout } = useAuth();
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchSessions();
@@ -111,10 +114,10 @@ export default function MentorDashboard() {
       await api.post('/masterclasses', masterclassForm);
       setShowMasterclassModal(false);
       setMasterclassForm({ title: '', pricePerStudent: 500, scheduledDate: '' });
-      alert("Masterclass created successfully!");
+      showToast("Masterclass created successfully!", 'success');
     } catch (err) {
       console.error(err);
-      alert("Failed to create masterclass.");
+      showToast("Failed to create masterclass.", 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -262,7 +265,7 @@ export default function MentorDashboard() {
                           <div className="flex items-center gap-4">
                             {session.status === 'CONFIRMED' && (
                               <button
-                                onClick={() => setActiveChat({ id: session.id, name: session.studentName })}
+                                onClick={() => setActiveChat({ id: session.id, participantId: session.studentId, name: session.studentName })}
                                 className="p-4 rounded-2xl border border-border-primary text-text-primary/40 hover:text-brand-accent hover:border-brand-accent/30 transition-all flex items-center justify-center"
                                 title="Open Chat"
                               >
@@ -366,7 +369,7 @@ export default function MentorDashboard() {
 
                           <div className="flex items-center gap-4">
                             <button
-                              onClick={() => setActiveChat({ id: session.id, name: session.studentName })}
+                              onClick={() => setActiveChat({ id: session.id, participantId: session.studentId, name: session.studentName })}
                               className="p-4 rounded-2xl border border-border-primary text-text-primary/40 hover:text-brand-accent hover:border-brand-accent/30 transition-all flex items-center justify-center"
                               title="Open Chat"
                             >
@@ -458,6 +461,7 @@ export default function MentorDashboard() {
         {activeChat && (
           <ChatModal
             sessionId={activeChat.id}
+            otherParticipantId={activeChat.participantId}
             otherParticipantName={activeChat.name}
             onClose={() => setActiveChat(null)}
           />

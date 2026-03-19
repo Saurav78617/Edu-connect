@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './context/ToastContext';
 import { AnimatePresence } from 'motion/react';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -9,9 +10,11 @@ import MentorDashboard from './pages/MentorDashboard';
 import Landing from './pages/Landing';
 import Profile from './pages/Profile';
 import Bookings from './pages/Bookings';
+import ResetPassword from './pages/ResetPassword';
 import CustomCursor from './components/CustomCursor';
 import PageLoader from './components/PageLoader';
 import BackgroundOrbs from './components/BackgroundOrbs';
+import ErrorBoundary from './components/ErrorBoundary';
 import { useState, useEffect } from 'react';
 
 const ProtectedRoute = ({ children, role }: { children: React.ReactNode, role?: string }) => {
@@ -30,6 +33,7 @@ const AnimatedRoutes = () => {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route
           path="/student/*"
@@ -72,16 +76,20 @@ export default function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <Router>
-          <div className="min-h-screen bg-bg-primary relative overflow-hidden">
-            <BackgroundOrbs />
-            <AnimatePresence mode="wait">
-              {isLoading && <PageLoader key="global-loader" />}
-            </AnimatePresence>
-            <CustomCursor />
-            <AnimatedRoutes />
-          </div>
-        </Router>
+        <ToastProvider>
+          <Router>
+            <div className="min-h-screen bg-bg-primary relative overflow-hidden">
+              <BackgroundOrbs />
+              <AnimatePresence mode="wait">
+                {isLoading && <PageLoader key="global-loader" />}
+              </AnimatePresence>
+              <ErrorBoundary>
+                <CustomCursor />
+                <AnimatedRoutes />
+              </ErrorBoundary>
+            </div>
+          </Router>
+        </ToastProvider>
       </ThemeProvider>
     </AuthProvider>
   );

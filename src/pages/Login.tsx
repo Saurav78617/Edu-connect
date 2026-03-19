@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'motion/react';
 import { ArrowRight, ArrowLeft, Mail, Lock, Sparkles, ShieldCheck, Fingerprint, X, Eye, EyeOff } from 'lucide-react';
 import GridBackground from '../components/GridBackground';
@@ -18,6 +19,7 @@ export default function Login() {
   const [sendingRecovery, setSendingRecovery] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { showToast } = useToast();
 
   // Mouse Parallax Effect
   const mouseX = useMotionValue(0);
@@ -59,16 +61,20 @@ export default function Login() {
     }
   };
 
-  const handleRecoverySubmit = (e: React.FormEvent) => {
+  const handleRecoverySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!recoveryEmail) return;
     setSendingRecovery(true);
-    setTimeout(() => {
-      setSendingRecovery(false);
+    try {
+      const res = await api.post('/auth/forgot-password', { email: recoveryEmail });
+      showToast(res.data.message || 'Recovery link sent to your email!', 'success');
       setShowForgotModal(false);
       setRecoveryEmail('');
-      alert('Recovery link sent to your email!');
-    }, 1500);
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Failed to send recovery link', 'error');
+    } finally {
+      setSendingRecovery(false);
+    }
   };
 
   const containerVariants = {

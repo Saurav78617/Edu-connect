@@ -2,25 +2,40 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'motion/react';
-import { ArrowLeft, ArrowRight, Mail, Lock, Sparkles, ShieldCheck, Fingerprint, X, User, Briefcase, ChevronRight, Eye, EyeOff, UserCircle } from 'lucide-react';
+import { Mail, Lock, Sparkles, Fingerprint, User, Briefcase, Eye, EyeOff, UserCircle, ArrowRight } from 'lucide-react';
 import GridBackground from '../components/GridBackground';
 import FloatingNav from '../components/FloatingNav';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { registerSchema, RegisterFormData } from '../utils/schemas';
 
 export default function Register() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    role: 'STUDENT',
-    skills: '',
-    city: '',
-    experienceYears: '',
-    bio: '',
-    hourlyRate: ''
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      role: 'STUDENT',
+      name: '',
+      email: '',
+      password: '',
+      city: '',
+      skills: '',
+      bio: '',
+      experienceYears: '',
+      hourlyRate: ''
+    },
+    mode: 'onTouched'
   });
+
+  const selectedRole = watch('role');
+
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState('');
   const navigate = useNavigate();
 
   // Mouse Parallax Effect
@@ -45,23 +60,18 @@ export default function Register() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [mouseX, mouseY]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  const onSubmit = async (data: RegisterFormData) => {
+    setApiError('');
     try {
       await api.post('/auth/register', {
-        ...formData,
-        email: formData.email.trim().toLowerCase(),
-        skills: formData.skills.split(',').map(s => s.trim()).filter(s => s),
-        experienceYears: formData.experienceYears ? parseInt(formData.experienceYears) : undefined,
-        hourlyRate: formData.role === 'MENTOR' ? (formData.hourlyRate ? parseFloat(formData.hourlyRate) : 0) : undefined
+        ...data,
+        email: data.email.trim().toLowerCase(),
+        experienceYears: data.experienceYears ? parseInt(data.experienceYears as string) : undefined,
+        hourlyRate: data.role === 'MENTOR' ? (data.hourlyRate ? parseFloat(data.hourlyRate as string) : 0) : undefined
       });
       navigate('/login');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed');
-    } finally {
-      setLoading(false);
+      setApiError(err.response?.data?.message || 'Registration failed');
     }
   };
 
@@ -69,10 +79,7 @@ export default function Register() {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.08,
-        delayChildren: 0.2
-      }
+      transition: { staggerChildren: 0.08, delayChildren: 0.2 }
     }
   };
 
@@ -169,30 +176,30 @@ export default function Register() {
             </div>
 
             <AnimatePresence mode="wait">
-              {error && (
+              {apiError && (
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0 }}
                   className="bg-red-500/10 border-l-2 border-red-500 text-red-400 p-5 rounded-r-2xl text-sm"
                 >
-                  {error}
+                  {apiError}
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <form onSubmit={handleSubmit} className="space-y-10">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
               {/* Sleek Pill Role Selection */}
               <motion.div variants={itemVariants} className="relative flex p-1.5 bg-[#141414] rounded-2xl w-full max-w-md mx-auto border border-white/5 shadow-inner">
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, role: 'STUDENT' })}
-                  className={`relative flex-1 flex items-center justify-center gap-3 py-4 text-[12px] font-medium uppercase tracking-[0.2em] transition-colors duration-300 z-10 ${formData.role === 'STUDENT'
+                  onClick={() => setValue('role', 'STUDENT')}
+                  className={`relative flex-1 flex items-center justify-center gap-3 py-4 text-[12px] font-medium uppercase tracking-[0.2em] transition-colors duration-300 z-10 ${selectedRole === 'STUDENT'
                     ? 'text-black font-semibold'
                     : 'text-white/40 hover:text-white/80'
                     }`}
                 >
-                  {formData.role === 'STUDENT' && (
+                  {selectedRole === 'STUDENT' && (
                     <motion.div
                       layoutId="role-indicator"
                       className="absolute inset-0 bg-white rounded-[14px] shadow-sm z-[-1]"
@@ -203,13 +210,13 @@ export default function Register() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, role: 'MENTOR' })}
-                  className={`relative flex-1 flex items-center justify-center gap-3 py-4 text-[12px] font-medium uppercase tracking-[0.2em] transition-colors duration-300 z-10 ${formData.role === 'MENTOR'
+                  onClick={() => setValue('role', 'MENTOR')}
+                  className={`relative flex-1 flex items-center justify-center gap-3 py-4 text-[12px] font-medium uppercase tracking-[0.2em] transition-colors duration-300 z-10 ${selectedRole === 'MENTOR'
                     ? 'text-black font-semibold'
                     : 'text-white/40 hover:text-white/80'
                     }`}
                 >
-                  {formData.role === 'MENTOR' && (
+                  {selectedRole === 'MENTOR' && (
                     <motion.div
                       layoutId="role-indicator"
                       className="absolute inset-0 bg-white rounded-[14px] shadow-sm z-[-1]"
@@ -222,57 +229,53 @@ export default function Register() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <motion.div variants={itemVariants} className="relative group">
-                  <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20 mb-4 group-focus-within:text-brand-accent transition-all">
+                  <label className={`block text-[10px] font-bold uppercase tracking-[0.3em] mb-4 transition-all ${errors.name ? 'text-red-400' : 'text-text-primary/20 group-focus-within:text-brand-accent'}`}>
                     Full Name
                   </label>
                   <div className="relative flex items-center">
-                    <UserCircle className="absolute left-0 text-text-primary/10 group-focus-within:text-brand-accent transition-all" size={20} />
+                    <UserCircle className={`absolute left-0 transition-all ${errors.name ? 'text-red-400' : 'text-text-primary/10 group-focus-within:text-brand-accent'}`} size={20} />
                     <input
                       type="text"
-                      required
                       autoComplete="name"
-                      className="w-full bg-transparent border-b border-border-primary py-4 pl-10 pr-4 text-text-primary outline-none focus:border-brand-accent transition-all placeholder:text-text-primary/5 font-light"
+                      {...register('name')}
+                      className={`w-full bg-transparent border-b py-4 pl-10 pr-4 text-text-primary outline-none transition-all placeholder:text-text-primary/5 font-light ${errors.name ? 'border-red-500/50' : 'border-border-primary focus:border-brand-accent'}`}
                       placeholder="John Doe"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
-                    <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />
+                    {!errors.name && <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />}
                   </div>
+                  {errors.name && <span className="text-red-400 text-[10px] mt-2 block">{errors.name.message}</span>}
                 </motion.div>
 
                 <motion.div variants={itemVariants} className="relative group">
-                  <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20 mb-4 group-focus-within:text-brand-accent transition-all">
+                  <label className={`block text-[10px] font-bold uppercase tracking-[0.3em] mb-4 transition-all ${errors.email ? 'text-red-400' : 'text-text-primary/20 group-focus-within:text-brand-accent'}`}>
                     Email Address
                   </label>
                   <div className="relative flex items-center">
-                    <Mail className="absolute left-0 text-text-primary/10 group-focus-within:text-brand-accent transition-all" size={20} />
+                    <Mail className={`absolute left-0 transition-all ${errors.email ? 'text-red-400' : 'text-text-primary/10 group-focus-within:text-brand-accent'}`} size={20} />
                     <input
                       type="email"
-                      required
                       autoComplete="email"
-                      className="w-full bg-transparent border-b border-border-primary py-4 pl-10 pr-4 text-text-primary outline-none focus:border-brand-accent transition-all placeholder:text-text-primary/5 font-light"
+                      {...register('email')}
+                      className={`w-full bg-transparent border-b py-4 pl-10 pr-4 text-text-primary outline-none transition-all placeholder:text-text-primary/5 font-light ${errors.email ? 'border-red-500/50' : 'border-border-primary focus:border-brand-accent'}`}
                       placeholder="name@domain.com"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     />
-                    <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />
+                    {!errors.email && <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />}
                   </div>
+                  {errors.email && <span className="text-red-400 text-[10px] mt-2 block">{errors.email.message}</span>}
                 </motion.div>
 
                 <motion.div variants={itemVariants} className="relative group">
-                  <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20 mb-4 group-focus-within:text-brand-accent transition-all">
+                  <label className={`block text-[10px] font-bold uppercase tracking-[0.3em] mb-4 transition-all ${errors.password ? 'text-red-400' : 'text-text-primary/20 group-focus-within:text-brand-accent'}`}>
                     Password
                   </label>
                   <div className="relative flex items-center">
-                    <Lock className="absolute left-0 text-text-primary/10 group-focus-within:text-brand-accent transition-all" size={20} />
+                    <Lock className={`absolute left-0 transition-all ${errors.password ? 'text-red-400' : 'text-text-primary/10 group-focus-within:text-brand-accent'}`} size={20} />
                     <input
                       type={showPassword ? 'text' : 'password'}
-                      required
                       autoComplete="new-password"
-                      className="w-full bg-transparent border-b border-border-primary py-4 pl-10 pr-12 text-text-primary outline-none focus:border-brand-accent transition-all placeholder:text-text-primary/5 font-light"
+                      {...register('password')}
+                      className={`w-full bg-transparent border-b py-4 pl-10 pr-12 text-text-primary outline-none transition-all placeholder:text-text-primary/5 font-light ${errors.password ? 'border-red-500/50' : 'border-border-primary focus:border-brand-accent'}`}
                       placeholder="••••••••"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     />
                     <button
                       type="button"
@@ -281,38 +284,39 @@ export default function Register() {
                     >
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
-                    <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />
+                    {!errors.password && <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />}
                   </div>
+                  {errors.password && <span className="text-red-400 text-[10px] mt-2 block">{errors.password.message}</span>}
                 </motion.div>
 
-                {formData.role === 'MENTOR' && (
+                {selectedRole === 'MENTOR' && (
                   <>
                     <motion.div variants={itemVariants} className="relative group">
-                      <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20 mb-4 group-focus-within:text-brand-accent transition-all">
+                      <label className={`block text-[10px] font-bold uppercase tracking-[0.3em] mb-4 transition-all ${errors.experienceYears ? 'text-red-400' : 'text-text-primary/20 group-focus-within:text-brand-accent'}`}>
                         Experience (Years)
                       </label>
                       <input
                         type="number"
-                        className="w-full bg-transparent border-b border-border-primary py-4 text-text-primary outline-none focus:border-brand-accent transition-all placeholder:text-text-primary/5 font-light"
+                        {...register('experienceYears')}
+                        className={`w-full bg-transparent border-b py-4 text-text-primary outline-none transition-all placeholder:text-text-primary/5 font-light ${errors.experienceYears ? 'border-red-500/50' : 'border-border-primary focus:border-brand-accent'}`}
                         placeholder="e.g. 5"
-                        value={formData.experienceYears}
-                        onChange={(e) => setFormData({ ...formData, experienceYears: e.target.value })}
                       />
-                      <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />
+                      {errors.experienceYears && <span className="text-red-400 text-[10px] mt-2 block">{errors.experienceYears.message}</span>}
+                      {!errors.experienceYears && <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />}
                     </motion.div>
 
                     <motion.div variants={itemVariants} className="relative group">
-                      <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20 mb-4 group-focus-within:text-brand-accent transition-all">
+                      <label className={`block text-[10px] font-bold uppercase tracking-[0.3em] mb-4 transition-all ${errors.hourlyRate ? 'text-red-400' : 'text-text-primary/20 group-focus-within:text-brand-accent'}`}>
                         Hourly Rate (₹/hr)
                       </label>
                       <input
                         type="number"
-                        className="w-full bg-transparent border-b border-border-primary py-4 text-text-primary outline-none focus:border-brand-accent transition-all placeholder:text-text-primary/5 font-light"
+                        {...register('hourlyRate')}
+                        className={`w-full bg-transparent border-b py-4 text-text-primary outline-none transition-all placeholder:text-text-primary/5 font-light ${errors.hourlyRate ? 'border-red-500/50' : 'border-border-primary focus:border-brand-accent'}`}
                         placeholder="e.g. 500"
-                        value={formData.hourlyRate}
-                        onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })}
                       />
-                      <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />
+                      {errors.hourlyRate && <span className="text-red-400 text-[10px] mt-2 block">{errors.hourlyRate.message}</span>}
+                      {!errors.hourlyRate && <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />}
                     </motion.div>
                   </>
                 )}
@@ -320,46 +324,46 @@ export default function Register() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <motion.div variants={itemVariants} className="relative group">
-                  <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20 mb-4 group-focus-within:text-brand-accent transition-all">
+                  <label className={`block text-[10px] font-bold uppercase tracking-[0.3em] mb-4 transition-all ${errors.city ? 'text-red-400' : 'text-text-primary/20 group-focus-within:text-brand-accent'}`}>
                     Base City Location
                   </label>
                   <input
                     type="text"
-                    className="w-full bg-transparent border-b border-border-primary py-4 text-text-primary outline-none focus:border-brand-accent transition-all placeholder:text-text-primary/5 font-light"
+                    {...register('city')}
+                    className={`w-full bg-transparent border-b py-4 text-text-primary outline-none transition-all placeholder:text-text-primary/5 font-light ${errors.city ? 'border-red-500/50' : 'border-border-primary focus:border-brand-accent'}`}
                     placeholder="e.g. Mumbai, New York..."
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                   />
-                  <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />
+                  {errors.city && <span className="text-red-400 text-[10px] mt-2 block">{errors.city.message}</span>}
+                  {!errors.city && <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />}
                 </motion.div>
 
                 <motion.div variants={itemVariants} className="relative group">
-                  <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20 mb-4 group-focus-within:text-brand-accent transition-all">
+                  <label className={`block text-[10px] font-bold uppercase tracking-[0.3em] mb-4 transition-all ${errors.skills ? 'text-red-400' : 'text-text-primary/20 group-focus-within:text-brand-accent'}`}>
                     Skills (comma separated)
                   </label>
                   <input
                     type="text"
-                    className="w-full bg-transparent border-b border-border-primary py-4 text-text-primary outline-none focus:border-brand-accent transition-all placeholder:text-text-primary/5 font-light"
+                    {...register('skills')}
+                    className={`w-full bg-transparent border-b py-4 text-text-primary outline-none transition-all placeholder:text-text-primary/5 font-light ${errors.skills ? 'border-red-500/50' : 'border-border-primary focus:border-brand-accent'}`}
                     placeholder="React, Python, Design..."
-                    value={formData.skills}
-                    onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
                   />
-                  <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />
+                  {errors.skills && <span className="text-red-400 text-[10px] mt-2 block">{errors.skills.message}</span>}
+                  {!errors.skills && <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />}
                 </motion.div>
               </div>
 
               <motion.div variants={itemVariants} className="relative group">
-                <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-text-primary/20 mb-4 group-focus-within:text-brand-accent transition-all">
+                <label className={`block text-[10px] font-bold uppercase tracking-[0.3em] mb-4 transition-all ${errors.bio ? 'text-red-400' : 'text-text-primary/20 group-focus-within:text-brand-accent'}`}>
                   Professional Bio
                 </label>
                 <textarea
                   rows={2}
-                  className="w-full bg-transparent border-b border-border-primary py-4 text-text-primary outline-none focus:border-brand-accent transition-all placeholder:text-text-primary/5 font-light resize-none"
+                  {...register('bio')}
+                  className={`w-full bg-transparent border-b py-4 text-text-primary outline-none transition-all placeholder:text-text-primary/5 font-light resize-none ${errors.bio ? 'border-red-500/50' : 'border-border-primary focus:border-brand-accent'}`}
                   placeholder="Tell us about your journey..."
-                  value={formData.bio}
-                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                 />
-                <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />
+                {errors.bio && <span className="text-red-400 text-[10px] mt-2 block">{errors.bio.message}</span>}
+                {!errors.bio && <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />}
               </motion.div>
 
               <motion.button
@@ -367,11 +371,11 @@ export default function Register() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 type="submit"
-                disabled={loading}
+                disabled={isSubmitting}
                 className="w-full group relative overflow-hidden bg-text-primary text-bg-primary py-6 rounded-2xl font-bold flex items-center justify-center gap-4 hover:text-text-primary transition-all duration-500 disabled:opacity-50"
               >
                 <span className="relative z-10 flex items-center gap-3 text-xs uppercase tracking-[0.2em]">
-                  {loading ? 'Creating Profile...' : (
+                  {isSubmitting ? 'Creating Profile...' : (
                     <>
                       Create Account <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform duration-500" />
                     </>

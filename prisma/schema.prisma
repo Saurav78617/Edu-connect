@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model enrollments {
+  studentId     Int
+  masterclassId Int
+  enrolledAt    String?       @default("CURRENT_TIMESTAMP")
+  masterclasses masterclasses @relation(fields: [masterclassId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users         users         @relation(fields: [studentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([studentId, masterclassId])
+  @@index([masterclassId], map: "idx_enrollments_masterclassId")
+  @@index([studentId], map: "idx_enrollments_studentId")
+}
+
+model masterclasses {
+  id              Int           @id @default(autoincrement())
+  mentorId        Int
+  title           String
+  pricePerStudent Float
+  maxCapacity     Int?          @default(10)
+  currentEnrolled Int?          @default(0)
+  scheduledDate   String
+  createdAt       String?       @default("CURRENT_TIMESTAMP")
+  enrollments     enrollments[]
+  users           users         @relation(fields: [mentorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([mentorId], map: "idx_masterclasses_mentorId")
+}
+
+model messages {
+  id        Int      @id @default(autoincrement())
+  sessionId Int
+  senderId  Int
+  content   String
+  createdAt String?  @default("CURRENT_TIMESTAMP")
+  users     users    @relation(fields: [senderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sessions  sessions @relation(fields: [sessionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([sessionId], map: "idx_messages_sessionId")
+}
+
+model notifications {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  title     String
+  message   String
+  isRead    Int?    @default(0)
+  createdAt String? @default("CURRENT_TIMESTAMP")
+  users     users   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([userId], map: "idx_notifications_userId")
+}
+
+model reviews {
+  id                             Int      @id @default(autoincrement())
+  sessionId                      Int
+  studentId                      Int
+  mentorId                       Int
+  rating                         Int?
+  comment                        String?
+  createdAt                      String?  @default("CURRENT_TIMESTAMP")
+  users_reviews_mentorIdTousers  users    @relation("reviews_mentorIdTousers", fields: [mentorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_reviews_studentIdTousers users    @relation("reviews_studentIdTousers", fields: [studentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sessions                       sessions @relation(fields: [sessionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([mentorId], map: "idx_reviews_mentorId")
+}
+
+model sessions {
+  id                              Int        @id @default(autoincrement())
+  studentId                       Int
+  mentorId                        Int
+  scheduledAt                     String
+  status                          String?    @default("PENDING")
+  meetLink                        String?
+  price                           Float?
+  mode                            String?    @default("online")
+  completedAt                     String?
+  paymentOrderId                  String?
+  paymentId                       String?
+  paymentStatus                   String?    @default("PENDING")
+  messages                        messages[]
+  reviews                         reviews[]
+  users_sessions_mentorIdTousers  users      @relation("sessions_mentorIdTousers", fields: [mentorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_sessions_studentIdTousers users      @relation("sessions_studentIdTousers", fields: [studentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([mentorId], map: "idx_sessions_mentorId")
+  @@index([studentId], map: "idx_sessions_studentId")
+}
+
+model users {
+  id                                 Int             @id @default(autoincrement())
+  name                               String
+  email                              String          @unique(map: "sqlite_autoindex_users_1")
+  passwordHash                       String
+  role                               String
+  skills                             String?
+  experienceYears                    Int?
+  hourlyRate                         Float?
+  isAvailable                        Int?            @default(1)
+  bio                                String?
+  city                               String?
+  enrollments                        enrollments[]
+  masterclasses                      masterclasses[]
+  messages                           messages[]
+  notifications                      notifications[]
+  reviews_reviews_mentorIdTousers    reviews[]       @relation("reviews_mentorIdTousers")
+  reviews_reviews_studentIdTousers   reviews[]       @relation("reviews_studentIdTousers")
+  sessions_sessions_mentorIdTousers  sessions[]      @relation("sessions_mentorIdTousers")
+  sessions_sessions_studentIdTousers sessions[]      @relation("sessions_studentIdTousers")
+  resetToken                         String?
+  resetTokenExpiry                   String?
+}

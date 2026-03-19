@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Send, User, Loader2 } from 'lucide-react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { getSocket } from '../utils/socket';
 
 interface Message {
     id: number;
+    sessionId: number;
     senderId: number;
     content: string;
     createdAt: string;
@@ -14,21 +16,28 @@ interface Message {
 
 interface ChatModalProps {
     sessionId: number;
+    otherParticipantId: number;
     otherParticipantName: string;
     onClose: () => void;
 }
 
-export default function ChatModal({ sessionId, otherParticipantName, onClose }: ChatModalProps) {
+export default function ChatModal({ sessionId, otherParticipantId, otherParticipantName, onClose }: ChatModalProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
+    const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const { user } = useAuth();
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const token = localStorage.getItem('token');
 
     useEffect(() => {
         fetchMessages();
-        setupSSE();
+        const cleanup = setupSocket();
+        
+        return () => {
+            if (cleanup) cleanup();
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sessionId]);
 
@@ -47,28 +56,41 @@ export default function ChatModal({ sessionId, otherParticipantName, onClose }: 
         }
     };
 
-    const setupSSE = () => {
-        if (!token) return;
-        const eventSource = new EventSource(`/api/notifications/stream?token=${token}`);
+    const setupSocket = () => {
+        const socket = getSocket();
+        if (!socket) return;
 
-        eventSource.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                // Only process if it's a chat message for this session
-                if (data._type === 'CHAT_MESSAGE' && data.sessionId === sessionId) {
-                    setMessages((prev) => {
-                        // Check for duplicates
-                        if (prev.find(m => m.id === data.id)) return prev;
-                        return [...prev, data];
-                    });
-                }
-            } catch (err) {
-                console.error('SSE Parse Error:', err);
+        const handleChatMessage = (data: Message) => {
+            // Only process if it's a chat message for this session
+            if (data.sessionId === sessionId) {
+                setMessages((prev) => {
+                    // Check for duplicates
+                    if (prev.find(m => m.id === data.id)) return prev;
+                    return [...prev, data];
+                });
             }
         };
 
+        const handleTyping = (data: { userId: number; sessionId: number }) => {
+            if (data.sessionId === sessionId && data.userId === otherParticipantId) {
+                setIsPartnerTyping(true);
+            }
+        };
+
+        const handleStopTyping = (data: { userId: number; sessionId: number }) => {
+            if (data.sessionId === sessionId && data.userId === otherParticipantId) {
+                setIsPartnerTyping(false);
+            }
+        };
+
+        socket.on('chat_message', handleChatMessage);
+        socket.on('user_typing', handleTyping);
+        socket.on('user_stop_typing', handleStopTyping);
+
         return () => {
-            eventSource.close();
+            socket.off('chat_message', handleChatMessage);
+            socket.off('user_typing', handleTyping);
+            socket.off('user_stop_typing', handleStopTyping);
         };
     };
 
@@ -84,6 +106,7 @@ export default function ChatModal({ sessionId, otherParticipantName, onClose }: 
         const tempId = Date.now();
         const optimisticMessage: Message = {
             id: tempId,
+            sessionId: sessionId,
             senderId: user.id,
             content: newMessage,
             createdAt: new Date().toISOString(),
@@ -176,6 +199,20 @@ export default function ChatModal({ sessionId, otherParticipantName, onClose }: 
                             })}
                         </AnimatePresence>
                     )}
+                    {isPartnerTyping && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="flex mr-auto items-start max-w-[80%] pt-2"
+                        >
+                            <div className="px-4 py-3 bg-surface-primary border border-border-primary rounded-2xl rounded-bl-sm flex gap-1 items-center h-[44px]">
+                                <span className="w-1.5 h-1.5 rounded-full bg-brand-accent/60 animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <span className="w-1.5 h-1.5 rounded-full bg-brand-accent/60 animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <span className="w-1.5 h-1.5 rounded-full bg-brand-accent/60 animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </div>
+                        </motion.div>
+                    )}
                     <div ref={messagesEndRef} />
                 </div>
 
@@ -185,7 +222,17 @@ export default function ChatModal({ sessionId, otherParticipantName, onClose }: 
                         <input
                             type="text"
                             value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
+                            onChange={(e) => {
+                                setNewMessage(e.target.value);
+                                const socket = getSocket();
+                                if (socket) {
+                                    socket.emit("typing", { recipientId: otherParticipantId, sessionId });
+                                    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                                    typingTimeoutRef.current = setTimeout(() => {
+                                        socket.emit("stop_typing", { recipientId: otherParticipantId, sessionId });
+                                    }, 1500);
+                                }
+                            }}
                             placeholder="Type your message..."
                             className="w-full bg-bg-primary border border-border-primary rounded-2xl py-3 pl-4 pr-12 text-sm outline-none focus:border-brand-accent transition-all placeholder:text-text-primary/20"
                         />

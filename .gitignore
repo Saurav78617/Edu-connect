@@ -12,3 +12,5 @@ coverage/
 *.db-wal
 *.db-shm
 bridge.db*
+
+/src/generated/prisma
