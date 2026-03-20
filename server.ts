@@ -184,9 +184,19 @@ async function startServer() {
   // --- RATE LIMITERS ---
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // Limit each IP to 10 auth requests per `window`
+    max: 100, // Limit each IP to 100 auth requests per `window`
     message: { message: "Too many authentication attempts, please try again later." }
   });
+
+  const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: { message: "Too many requests from this IP, please try again later." }
+  });
+
+  app.use("/api/sessions", apiLimiter);
+  app.use("/api/messages", apiLimiter);
+  app.use("/api/chat", apiLimiter);
 
   // --- AUTH ROUTES ---
   app.post("/api/auth/register", authLimiter, async (req, res, next) => {
@@ -194,6 +204,7 @@ async function startServer() {
     const validationResult = registerSchema.safeParse(req.body);
 
     if (!validationResult.success) {
+      console.error("Zod Validation Failed during Registration:", validationResult.error.issues);
       // Return the first Zod error message to the client
       const firstError = validationResult.error.issues[0];
       return res.status(400).json({ message: firstError.message, errors: validationResult.error.issues });
@@ -426,12 +437,19 @@ async function startServer() {
   // --- SESSION ROUTES ---
   app.post("/api/sessions/book", authenticateToken, async (req: AuthRequest, res, next) => {
     try {
-      const { mentorId, scheduledAt, price, mode } = req.body;
+      const { mentorId, scheduledAt, mode } = req.body;
       const studentId = req.user?.id;
 
       if (req.user?.role !== 'STUDENT') {
         return res.status(403).json({ message: "Only students can book sessions" });
       }
+      
+      const mentor = await prisma.users.findUnique({ where: { id: Number(mentorId) } });
+      if (!mentor || mentor.role !== 'MENTOR') {
+        return res.status(404).json({ message: "Mentor not found or invalid" });
+      }
+
+      const actualPrice = mentor.hourlyRate || 0;
 
       const sessionMode = mode === 'offline' ? 'offline' : 'online';
 
@@ -440,7 +458,7 @@ async function startServer() {
       }
       
       // Minimum 1 INR (100 paise) required for Razorpay
-      const amountInPaise = Math.max(Number(price) * 100, 100);
+      const amountInPaise = Math.max(Number(actualPrice) * 100, 100);
 
       let order;
       try {
@@ -459,7 +477,7 @@ async function startServer() {
           studentId: Number(studentId),
           mentorId: Number(mentorId),
           scheduledAt,
-          price: Number(price),
+          price: Number(actualPrice),
           mode: sessionMode,
           paymentOrderId: order.id,
           paymentStatus: "PENDING",

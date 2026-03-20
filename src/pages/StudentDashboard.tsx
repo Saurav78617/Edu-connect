@@ -166,7 +166,7 @@ export default function StudentDashboard() {
       const { orderId, amount, currency, id: sessionId } = res.data;
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || '', // Fallback empty if not set in .env
+        key: (import.meta as any).env.VITE_RAZORPAY_KEY_ID || '', // Fallback empty if not set in .env
         amount,
         currency,
         name: "Edu Connect",
