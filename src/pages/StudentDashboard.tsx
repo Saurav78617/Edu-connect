@@ -266,6 +266,10 @@ export default function StudentDashboard() {
         <div className="flex items-center gap-6">
           <NotificationBell />
           <ThemeToggle />
+          <a href="#masterclasses" className="p-2.5 hover:bg-surface-primary rounded-xl transition-all border border-transparent hover:border-border-primary group relative">
+            <Sparkles size={20} className="text-text-primary/60 group-hover:text-brand-accent transition-colors" />
+            <span className="absolute -bottom-12 left-1/2 -translate-x-1/2 px-3 py-1 bg-text-primary text-bg-primary text-[8px] font-bold uppercase tracking-widest rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Masterclasses</span>
+          </a>
           <Link to="/student/bookings" className="p-2.5 hover:bg-surface-primary rounded-xl transition-all border border-transparent hover:border-border-primary group relative">
             <Calendar size={20} className="text-text-primary/60 group-hover:text-brand-accent transition-colors" />
             <span className="absolute -bottom-12 left-1/2 -translate-x-1/2 px-3 py-1 bg-text-primary text-bg-primary text-[8px] font-bold uppercase tracking-widest rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">My Bookings</span>
@@ -354,7 +358,7 @@ export default function StudentDashboard() {
 
         {/* Masterclass Circles */}
         {masterclasses.length > 0 && (
-          <section className="mb-24 space-y-8">
+          <section id="masterclasses" className="mb-24 space-y-8 scroll-mt-24">
             <div className="flex items-center gap-4 border-b border-border-primary pb-6">
               <h3 className="text-3xl font-serif italic text-text-primary">🔥 Trending Masterclass Circles</h3>
               <p className="text-[10px] uppercase tracking-[0.3em] text-brand-accent mt-2">1-to-Many Accelerated Learning</p>

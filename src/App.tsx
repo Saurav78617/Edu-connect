@@ -80,9 +80,7 @@ export default function App() {
           <Router>
             <div className="min-h-screen bg-bg-primary relative overflow-hidden">
               <BackgroundOrbs />
-              <AnimatePresence mode="wait">
-                {isLoading && <PageLoader key="global-loader" />}
-              </AnimatePresence>
+              {isLoading && <PageLoader key="global-loader" />}
               <ErrorBoundary>
                 <CustomCursor />
                 <AnimatedRoutes />
