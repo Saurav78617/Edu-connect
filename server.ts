@@ -5,6 +5,8 @@ import "dotenv/config";
 import { createServer as createViteServer } from "vite";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import cors from "cors";
+import helmet from "helmet";
 import { authenticateToken, AuthRequest } from "./src/middleware/auth.ts";
 import { GoogleGenAI } from "@google/genai";
 import rateLimit from "express-rate-limit";
@@ -13,6 +15,9 @@ import { PrismaClient } from '@prisma/client';
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 import Razorpay from "razorpay";
+import { OAuth2Client } from "google-auth-library";
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const prisma = new PrismaClient();
 
@@ -159,9 +164,22 @@ async function startServer() {
   });
 
   app.use(express.json());
+  app.use(helmet({
+    contentSecurityPolicy: process.env.NODE_ENV === "production" ? undefined : false,
+    crossOriginOpenerPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  }));  app.use(cors({ origin: "*", credentials: true }));
   const PORT = parseInt(process.env.PORT || "3000", 10);
 
   await seedMentors();
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
 
   // --- NOTIFICATION HELPER ---
   const createNotification = async (userId: number, title: string, message: string) => {
@@ -199,6 +217,153 @@ async function startServer() {
   app.use("/api/chat", apiLimiter);
 
   // --- AUTH ROUTES ---
+  app.post("/api/auth/google-login", authLimiter, async (req, res, next) => {
+    try {
+      const { credential } = req.body;
+      if (!credential) return res.status(400).json({ message: "Google credential is required" });
+
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      if (!payload || !payload.email) return res.status(400).json({ message: "Invalid Google token" });
+
+      const email = payload.email.toLowerCase();
+      const user = await prisma.users.findUnique({ where: { email } });
+
+      if (!user) {
+        return res.status(404).json({ message: "Account not found. Please register." });
+      }
+
+      if (user.emailVerified === false) {
+        await prisma.users.update({ where: { id: user.id }, data: { emailVerified: true } });
+      }
+
+      const token = jwt.sign(
+        { id: user.id, email: user.email, role: user.role },
+        JWT_SECRET,
+        { expiresIn: "24h" }
+      );
+
+      res.json({
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          skills: JSON.parse(user.skills || "[]")
+        }
+      });
+    } catch (error) {
+      console.error("Google Login Error:", error);
+      res.status(500).json({ message: "Google authentication failed" });
+    }
+  });
+
+  app.post("/api/auth/google-register", authLimiter, async (req, res, next) => {
+    try {
+      const { credential, role, skills, experienceYears, hourlyRate, bio, city } = req.body;
+      if (!credential || !role) {
+         return res.status(400).json({ message: "Google credential and role are required." });
+      }
+      
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      if (!payload || !payload.email) return res.status(400).json({ message: "Invalid Google token" });
+
+      const email = payload.email.toLowerCase();
+      const name = payload.name || "Google User";
+
+      const existingUser = await prisma.users.findUnique({ where: { email } });
+      if (existingUser) {
+        return res.status(400).json({ message: "Account already exists. Please log in." });
+      }
+
+      let skillsArray = [];
+      try {
+        if (typeof skills === 'string') {
+          skillsArray = skills.split(',').map((s: string) => s.trim()).filter((s: string) => s);
+        } else if (Array.isArray(skills)) {
+          skillsArray = skills;
+        }
+      } catch (e) {
+        skillsArray = [];
+      }
+
+      const randomPassword = crypto.randomBytes(32).toString('hex');
+      const passwordHash = await bcrypt.hash(randomPassword, 10);
+
+      const user = await prisma.users.create({
+        data: {
+          name,
+          email,
+          passwordHash,
+          role,
+          skills: JSON.stringify(skillsArray),
+          experienceYears: experienceYears ? Number(experienceYears) : null,
+          hourlyRate: hourlyRate ? Number(hourlyRate) : null,
+          bio: bio || "",
+          city: city || null,
+          emailVerified: true
+        }
+      });
+
+      // Send Welcome Email
+      try {
+        const mailOptions = {
+          from: '"EduConnect Support" <support@educonnect.com>',
+          to: user.email,
+          subject: "Welcome to EduConnect!",
+          html: `
+            <h3>Welcome to EduConnect, ${user.name}!</h3>
+            <p>Your account has been successfully created using Google Sign-In.</p>
+            <p>You can now log in and start connecting with others.</p>
+          `
+        };
+        transporter.sendMail(mailOptions)
+          .then(info => console.log("Welcome email sent to %s", user.email))
+          .catch(mailError => console.error("Failed to send welcome email:", mailError));
+      } catch (err) {
+        console.error("Mail error:", err);
+      }
+
+      // Create In-App Notification
+      await createNotification(
+        user.id,
+        "Welcome to EduConnect!",
+        "Your account was successfully created via Google. Enjoy using the platform!"
+      );
+
+      const token = jwt.sign(
+        { id: user.id, email: user.email, role: user.role },
+        JWT_SECRET,
+        { expiresIn: "24h" }
+      );
+
+      res.status(201).json({
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          skills: JSON.parse(user.skills || "[]")
+        },
+        message: "Google Registration successful!" 
+      });
+
+    } catch (error) {
+      console.error("Google Register Error:", error);
+      res.status(500).json({ message: "Google registration failed" });
+    }
+  });
+
+  // --- AUTH ROUTES ---
   app.post("/api/auth/register", authLimiter, async (req, res, next) => {
     // Zod Payload Validation
     const validationResult = registerSchema.safeParse(req.body);
@@ -232,6 +397,8 @@ async function startServer() {
       }
 
       const passwordHash = await bcrypt.hash(password, 10);
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+
       const user = await prisma.users.create({
         data: {
           name,
@@ -242,11 +409,62 @@ async function startServer() {
           experienceYears: experienceYears ? Number(experienceYears) : null,
           hourlyRate: hourlyRate ? Number(hourlyRate) : null,
           bio: bio || "",
-          city: city || null
+          city: city || null,
+          verificationToken,
+          emailVerified: process.env.NODE_ENV !== "production"
         }
       });
-      res.status(201).json({ id: user.id, message: "User registered successfully" });
+
+      const host = req.headers.host || 'localhost:3000';
+      const protocol = req.protocol || 'http';
+      // Use the frontend URL from env or fallback to a standard port for verification logic
+      const frontendUrl = process.env.FRONTEND_URL || `${protocol}://${host.replace(/:[0-9]+/, ':5173')}`;
+      const verifyUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
+
+      try {
+        const mailOptions = {
+          from: '"EduConnect Support" <support@educonnect.com>',
+          to: user.email,
+          subject: "Verify Your Email Address",
+          html: `
+            <h3>Welcome to EduConnect!</h3>
+            <p>Please verify your email address by clicking the link below:</p>
+            <a href="${verifyUrl}">Verify Email</a>
+          `
+        };
+        transporter.sendMail(mailOptions)
+          .then(info => console.log("Verification email sent: %s", nodemailer.getTestMessageUrl(info)))
+          .catch(mailError => console.error("Failed to send verification email:", mailError));
+      } catch (err) {
+        console.error("Try-catch error around mail:", err);
+      }
+
+      res.status(201).json({ id: user.id, message: "User registered successfully. Please check your email to verify your account." });
     } catch (error: any) {
+      next(error);
+    }
+  });
+
+  app.post("/api/auth/verify-email", async (req, res, next) => {
+    try {
+      const { token } = req.body;
+      if (!token) return res.status(400).json({ message: "Verification token is required" });
+
+      const user = await prisma.users.findFirst({
+        where: { verificationToken: token }
+      });
+
+      if (!user) {
+        return res.status(400).json({ message: "Invalid or expired verification token" });
+      }
+
+      await prisma.users.update({
+        where: { id: user.id },
+        data: { emailVerified: true, verificationToken: null }
+      });
+
+      res.json({ message: "Email verified successfully" });
+    } catch (error) {
       next(error);
     }
   });
@@ -267,6 +485,10 @@ async function startServer() {
       if (!isPasswordMatch) {
         console.log("Password mismatch for:", email);
         return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      if (user.emailVerified === false && process.env.NODE_ENV === "production") {
+        return res.status(401).json({ message: "Please verify your email before logging in." });
       }
 
       console.log("Login successful for:", email);
@@ -293,13 +515,6 @@ async function startServer() {
   });
 
   // --- PASSWORD RESET CONFIG ---
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
 
   app.post("/api/auth/forgot-password", authLimiter, async (req, res, next) => {
     try {

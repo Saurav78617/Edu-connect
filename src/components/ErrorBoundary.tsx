@@ -55,7 +55,7 @@ class ErrorBoundary extends Component<Props, State> {
                                     We encountered an unexpected error while rendering this sector of the Bridge. Our nodes have logged the anomaly.
                                 </p>
                                 
-                                {process.env.NODE_ENV === 'development' && this.state.error && (
+                                {(import.meta as any).env?.DEV && this.state.error && (
                                     <div className="mt-6 p-4 bg-black/40 rounded-xl border border-red-500/10 text-left overflow-x-auto">
                                         <p className="font-mono text-[10px] text-red-400/80 font-medium">
                                             {this.state.error.toString()}

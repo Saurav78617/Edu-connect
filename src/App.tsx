@@ -11,6 +11,7 @@ import Landing from './pages/Landing';
 import Profile from './pages/Profile';
 import Bookings from './pages/Bookings';
 import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';
 import CustomCursor from './components/CustomCursor';
 import PageLoader from './components/PageLoader';
 import BackgroundOrbs from './components/BackgroundOrbs';
@@ -34,6 +35,9 @@ const AnimatedRoutes = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/mentors" element={<Navigate to="/student" />} />
+        <Route path="/masterclasses" element={<Navigate to="/student#masterclasses" />} />
 
         <Route
           path="/student/*"

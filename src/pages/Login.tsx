@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { GoogleLogin } from '@react-oauth/google';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'motion/react';
 import { ArrowRight, ArrowLeft, Mail, Lock, Sparkles, ShieldCheck, Fingerprint, X, Eye, EyeOff } from 'lucide-react';
 import GridBackground from '../components/GridBackground';
@@ -12,7 +13,6 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState('');
@@ -46,7 +46,6 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
     try {
       const res = await api.post('/auth/login', {
         email: email.trim().toLowerCase(),
@@ -55,7 +54,7 @@ export default function Login() {
       login(res.data.token, res.data.user);
       navigate(res.data.user.role === 'STUDENT' ? '/student' : '/mentor');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed');
+      showToast(err.response?.data?.message || 'Login failed', 'error');
     } finally {
       setLoading(false);
     }
@@ -199,20 +198,6 @@ export default function Login() {
               </motion.p>
             </div>
 
-            <AnimatePresence mode="wait">
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-red-500/10 border-l-2 border-red-500 text-red-400 p-5 rounded-r-2xl text-sm flex items-center gap-4"
-                >
-                  <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
-                  {error}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             <form onSubmit={handleSubmit} className="space-y-10">
               <div className="space-y-8">
                 <motion.div variants={itemVariants} className="relative group">
@@ -300,6 +285,39 @@ export default function Login() {
                 </span>
                 <div className="absolute inset-0 bg-brand-accent translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[0.22, 1, 0.36, 1]" />
               </motion.button>
+
+              <motion.div variants={itemVariants} className="relative flex items-center gap-4 py-2">
+                <div className="flex-1 h-px bg-border-primary"></div>
+                <span className="text-[10px] uppercase tracking-widest text-text-primary/40 font-bold">OR</span>
+                <div className="flex-1 h-px bg-border-primary"></div>
+              </motion.div>
+
+              <motion.div variants={itemVariants} className="flex justify-center w-full">
+                <GoogleLogin
+                  onSuccess={async (credentialResponse) => {
+                    if (!credentialResponse.credential) return;
+                    setLoading(true);
+                    try {
+                      const res = await api.post('/auth/google-login', {
+                        credential: credentialResponse.credential
+                      });
+                      login(res.data.token, res.data.user);
+                      navigate(res.data.user.role === 'STUDENT' ? '/student' : '/mentor');
+                    } catch (err: any) {
+                      showToast(err.response?.data?.message || 'Google Login failed', 'error');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  onError={() => {
+                    showToast('Google login failed', 'error');
+                  }}
+                  theme="filled_black"
+                  shape="pill"
+                  text="continue_with"
+                  width="100%"
+                />
+              </motion.div>
             </form>
 
             <motion.div variants={itemVariants} className="pt-12 border-t border-border-primary text-center">

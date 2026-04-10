@@ -71,6 +71,7 @@ model reviews {
   sessions                       sessions @relation(fields: [sessionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([mentorId], map: "idx_reviews_mentorId")
+  @@index([studentId], map: "idx_reviews_studentId")
 }
 
 model sessions {
@@ -117,4 +118,6 @@ model users {
   sessions_sessions_studentIdTousers sessions[]      @relation("sessions_studentIdTousers")
   resetToken                         String?
   resetTokenExpiry                   String?
+  emailVerified                      Boolean?        @default(false)
+  verificationToken                  String?
 }

@@ -14,3 +14,8 @@ coverage/
 bridge.db*
 
 /src/generated/prisma
+
+# Agent files
+.gemini/
+.agent/
+.gsd/

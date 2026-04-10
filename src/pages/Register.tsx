@@ -8,6 +8,9 @@ import FloatingNav from '../components/FloatingNav';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, RegisterFormData } from '../utils/schemas';
+import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function Register() {
   const {
@@ -15,6 +18,7 @@ export default function Register() {
     handleSubmit,
     setValue,
     watch,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -29,14 +33,15 @@ export default function Register() {
       experienceYears: '',
       hourlyRate: ''
     },
-    mode: 'onTouched'
+    mode: 'onChange'
   });
 
   const selectedRole = watch('role');
 
   const [showPassword, setShowPassword] = useState(false);
-  const [apiError, setApiError] = useState('');
   const navigate = useNavigate();
+  const { showToast } = useToast();
+  const { login } = useAuth();
 
   // Mouse Parallax Effect
   const mouseX = useMotionValue(0);
@@ -61,17 +66,17 @@ export default function Register() {
   }, [mouseX, mouseY]);
 
   const onSubmit = async (data: RegisterFormData) => {
-    setApiError('');
     try {
-      await api.post('/auth/register', {
+      const res = await api.post('/auth/register', {
         ...data,
         email: data.email.trim().toLowerCase(),
         experienceYears: data.experienceYears ? parseInt(data.experienceYears as string) : undefined,
         hourlyRate: data.role === 'MENTOR' ? (data.hourlyRate ? parseFloat(data.hourlyRate as string) : 0) : undefined
       });
-      navigate('/login');
+      showToast(res.data.message || 'Registration successful! Please verify your email.', 'success');
+      setTimeout(() => navigate('/login'), 4000);
     } catch (err: any) {
-      setApiError(err.response?.data?.message || 'Registration failed');
+      showToast(err.response?.data?.message || 'Registration failed', 'error');
     }
   };
 
@@ -175,19 +180,6 @@ export default function Register() {
               </motion.h2>
             </div>
 
-            <AnimatePresence mode="wait">
-              {apiError && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="bg-red-500/10 border-l-2 border-red-500 text-red-400 p-5 rounded-r-2xl text-sm"
-                >
-                  {apiError}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
               {/* Sleek Pill Role Selection */}
               <motion.div variants={itemVariants} className="relative flex p-1.5 bg-[#141414] rounded-2xl w-full max-w-md mx-auto border border-white/5 shadow-inner">
@@ -286,6 +278,7 @@ export default function Register() {
                     </button>
                     {!errors.password && <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-brand-accent group-focus-within:w-full transition-all duration-700 ease-out" />}
                   </div>
+                  <p className="text-[9px] text-text-primary/40 mt-1">Must contain 8+ characters, 1 uppercase, 1 lowercase, 1 number, 1 special char.</p>
                   {errors.password && <span className="text-red-400 text-[10px] mt-2 block">{errors.password.message}</span>}
                 </motion.div>
 
@@ -383,6 +376,46 @@ export default function Register() {
                 </span>
                 <div className="absolute inset-0 bg-brand-accent translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[0.22, 1, 0.36, 1]" />
               </motion.button>
+
+              <motion.div variants={itemVariants} className="relative flex items-center gap-4 py-2">
+                <div className="flex-1 h-px bg-border-primary"></div>
+                <span className="text-[10px] uppercase tracking-widest text-text-primary/40 font-bold">OR</span>
+                <div className="flex-1 h-px bg-border-primary"></div>
+              </motion.div>
+
+              <motion.div variants={itemVariants} className="flex justify-center w-full">
+                <GoogleLogin
+                  onSuccess={async (credentialResponse) => {
+                    if (!credentialResponse.credential) return;
+                    
+                    try {
+                      const formData = getValues();
+                      const res = await api.post('/auth/google-register', {
+                        credential: credentialResponse.credential,
+                        role: formData.role,
+                        skills: formData.skills,
+                        experienceYears: formData.experienceYears ? parseInt(formData.experienceYears as string) : undefined,
+                        hourlyRate: formData.role === 'MENTOR' ? (formData.hourlyRate ? parseFloat(formData.hourlyRate as string) : 0) : undefined,
+                        bio: formData.bio,
+                        city: formData.city
+                      });
+                      
+                      showToast(res.data.message || 'Registration successful!', 'success');
+                      login(res.data.token, res.data.user);
+                      navigate(res.data.user.role === 'STUDENT' ? '/student' : '/mentor');
+                    } catch (err: any) {
+                      showToast(err.response?.data?.message || 'Google Registration failed', 'error');
+                    }
+                  }}
+                  onError={() => {
+                    showToast('Google Sign-up Failed', 'error');
+                  }}
+                  theme="filled_black"
+                  shape="pill"
+                  text="signup_with"
+                  width="100%"
+                />
+              </motion.div>
             </form>
 
             <motion.div variants={itemVariants} className="pt-12 border-t border-border-primary text-center">
