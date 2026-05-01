@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: edu-connect-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: educonnect
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  edu-connect-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: edu-connect-prod
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/educonnect?schema=public
+      - JWT_SECRET=educonnect_super_secret_jwt_key_2024
+      - EMAIL_USER=your_email@gmail.com
+      - EMAIL_PASS=your_app_password
+      - RAZORPAY_KEY_ID=your_razorpay_key
+      - RAZORPAY_KEY_SECRET=your_razorpay_secret
+      - GOOGLE_CLIENT_ID=your_google_client_id
+      - VITE_GOOGLE_CLIENT_ID=your_google_client_id
+    depends_on:
+      - db
+    volumes:
+      - edu-connect-data:/data
+    restart: unless-stopped
+
+volumes:
+  edu-connect-data:
+  postgres_data:

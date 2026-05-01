@@ -1,0 +1,54 @@
+FROM node:20-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache python3 make g++
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install dependencies (including devDependencies for build)
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Build frontend
+RUN npm run build
+
+# Generate Prisma Client
+RUN npx prisma generate
+
+# ========================================
+# Production Stage
+# ========================================
+FROM node:20-alpine
+
+# Create non-root user for security
+RUN addgroup -g 1000 node && adduser -D -u 1000 -G node node
+
+WORKDIR /app
+
+# Copy from builder
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=node:node /app/dist ./dist
+COPY --from=builder --chown=node:node /app/prisma ./prisma
+COPY --from=builder --chown=node:node /app/package*.json ./
+
+# Copy server file
+COPY --chown=node:node server.ts ./
+
+# Switch to non-root user
+USER node
+
+# Expose port
+EXPOSE 3000
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:3000/api/mentors || exit 1
+
+# Start command: Apply migrations and start server
+CMD ["sh", "-c", "npx prisma db push --skip-generate && npm start"]

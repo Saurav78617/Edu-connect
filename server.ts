@@ -691,7 +691,7 @@ async function startServer() {
         data: {
           studentId: Number(studentId),
           mentorId: Number(mentorId),
-          scheduledAt,
+          scheduledAt: new Date(scheduledAt),
           price: Number(actualPrice),
           mode: sessionMode,
           paymentOrderId: order.id,
@@ -798,7 +798,7 @@ async function startServer() {
 
       await prisma.sessions.update({
         where: { id: Number(id) },
-        data: { completedAt: new Date().toISOString() }
+        data: { completedAt: new Date() }
       });
 
       // Notify student
@@ -1144,7 +1144,7 @@ async function startServer() {
           mentorId: Number(mentorId),
           title,
           pricePerStudent: Number(pricePerStudent),
-          scheduledDate
+          scheduledDate: new Date(scheduledDate)
         }
       });
 
@@ -1161,7 +1161,7 @@ async function startServer() {
       const offset = (page - 1) * limit;
 
       const masterclasses = await prisma.masterclasses.findMany({
-        where: { scheduledDate: { gte: new Date().toISOString() } },
+        where: { scheduledDate: { gte: new Date() } },
         include: { users: { select: { name: true, hourlyRate: true } } },
         orderBy: { scheduledDate: 'asc' },
         skip: offset,
@@ -1169,7 +1169,7 @@ async function startServer() {
       });
 
       const totalCount = await prisma.masterclasses.count({
-        where: { scheduledDate: { gte: new Date().toISOString() } }
+        where: { scheduledDate: { gte: new Date() } }
       });
       
       const formattedData = masterclasses.map(m => ({

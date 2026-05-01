@@ -3,14 +3,14 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model enrollments {
   studentId     Int
   masterclassId Int
-  enrolledAt    String?       @default("CURRENT_TIMESTAMP")
+  enrolledAt    DateTime?     @default(now())
   masterclasses masterclasses @relation(fields: [masterclassId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users         users         @relation(fields: [studentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -26,8 +26,8 @@ model masterclasses {
   pricePerStudent Float
   maxCapacity     Int?          @default(10)
   currentEnrolled Int?          @default(0)
-  scheduledDate   String
-  createdAt       String?       @default("CURRENT_TIMESTAMP")
+  scheduledDate   DateTime
+  createdAt       DateTime?     @default(now())
   enrollments     enrollments[]
   users           users         @relation(fields: [mentorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -39,7 +39,7 @@ model messages {
   sessionId Int
   senderId  Int
   content   String
-  createdAt String?  @default("CURRENT_TIMESTAMP")
+  createdAt DateTime? @default(now())
   users     users    @relation(fields: [senderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sessions  sessions @relation(fields: [sessionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -47,13 +47,13 @@ model messages {
 }
 
 model notifications {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   userId    Int
   title     String
   message   String
-  isRead    Int?    @default(0)
-  createdAt String? @default("CURRENT_TIMESTAMP")
-  users     users   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  isRead    Int?     @default(0)
+  createdAt DateTime? @default(now())
+  users     users    @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([userId], map: "idx_notifications_userId")
 }
@@ -65,7 +65,7 @@ model reviews {
   mentorId                       Int
   rating                         Int?
   comment                        String?
-  createdAt                      String?  @default("CURRENT_TIMESTAMP")
+  createdAt                      DateTime? @default(now())
   users_reviews_mentorIdTousers  users    @relation("reviews_mentorIdTousers", fields: [mentorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_reviews_studentIdTousers users    @relation("reviews_studentIdTousers", fields: [studentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sessions                       sessions @relation(fields: [sessionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -78,12 +78,12 @@ model sessions {
   id                              Int        @id @default(autoincrement())
   studentId                       Int
   mentorId                        Int
-  scheduledAt                     String
+  scheduledAt                     DateTime
   status                          String?    @default("PENDING")
   meetLink                        String?
   price                           Float?
   mode                            String?    @default("online")
-  completedAt                     String?
+  completedAt                     DateTime?
   paymentOrderId                  String?
   paymentId                       String?
   paymentStatus                   String?    @default("PENDING")
@@ -99,7 +99,7 @@ model sessions {
 model users {
   id                                 Int             @id @default(autoincrement())
   name                               String
-  email                              String          @unique(map: "sqlite_autoindex_users_1")
+  email                              String          @unique
   passwordHash                       String
   role                               String
   skills                             String?

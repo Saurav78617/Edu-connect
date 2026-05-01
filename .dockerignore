@@ -1,0 +1,7 @@
+node_modules
+dist
+.env
+bridge.db
+bridge.db-*
+*.log
+.DS_Store
