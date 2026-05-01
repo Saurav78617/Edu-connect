@@ -416,14 +416,13 @@ async function startServer() {
       });
 
       const host = req.headers.host || 'localhost:3000';
-      const protocol = req.protocol || 'http';
-      // Use the frontend URL from env or fallback to a standard port for verification logic
-      const frontendUrl = process.env.FRONTEND_URL || `${protocol}://${host.replace(/:[0-9]+/, ':5173')}`;
+      const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+      const frontendUrl = process.env.FRONTEND_URL || `${protocol}://${host}`;
       const verifyUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
 
       try {
         const mailOptions = {
-          from: '"EduConnect Support" <support@educonnect.com>',
+          from: `"EduConnect Support" <${process.env.EMAIL_USER}>`,
           to: user.email,
           subject: "Verify Your Email Address",
           html: `
