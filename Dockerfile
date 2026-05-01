@@ -29,4 +29,4 @@ ENV NODE_ENV=production
 ENV PORT=3000
 
 # Start command: Apply database schema (create tables if missing) and start the server
-CMD ["sh", "-c", "npx prisma db push && npm start"]
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss --skip-generate && npm start"]
