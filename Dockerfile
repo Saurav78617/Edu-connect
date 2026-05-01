@@ -21,12 +21,12 @@ RUN npm run build
 # Generate Prisma Client
 RUN npx prisma generate
 
-# Expose the API and Web port
-EXPOSE 3000
+# Expose port (Render will override with its own PORT env var)
+EXPOSE 10000
 
 # Set environment variables for production
 ENV NODE_ENV=production
-ENV PORT=3000
 
-# Start command: Apply database schema (create tables if missing) and start the server
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss --skip-generate && npm start"]
+# Start command: Apply database schema and start the server
+# Use || true so server starts even if db push has issues (e.g. already in sync)
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss --skip-generate || true && npm start"]
