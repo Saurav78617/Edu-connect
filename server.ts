@@ -168,7 +168,7 @@ async function startServer() {
     contentSecurityPolicy: process.env.NODE_ENV === "production" ? undefined : false,
     crossOriginOpenerPolicy: false,
     crossOriginEmbedderPolicy: false,
-  }));  app.use(cors({ origin: "*", credentials: true }));
+  })); app.use(cors({ origin: "*", credentials: true }));
   const PORT = parseInt(process.env.PORT || "3000", 10);
 
   await seedMentors();
@@ -266,9 +266,9 @@ async function startServer() {
     try {
       const { credential, role, skills, experienceYears, hourlyRate, bio, city } = req.body;
       if (!credential || !role) {
-         return res.status(400).json({ message: "Google credential and role are required." });
+        return res.status(400).json({ message: "Google credential and role are required." });
       }
-      
+
       const ticket = await googleClient.verifyIdToken({
         idToken: credential,
         audience: process.env.GOOGLE_CLIENT_ID,
@@ -354,7 +354,7 @@ async function startServer() {
           role: user.role,
           skills: JSON.parse(user.skills || "[]")
         },
-        message: "Google Registration successful!" 
+        message: "Google Registration successful!"
       });
 
     } catch (error) {
@@ -384,7 +384,7 @@ async function startServer() {
       if (existingUser) {
         return res.status(400).json({ message: "Email already exists" });
       }
-      
+
       let skillsArray = [];
       try {
         if (typeof skills === 'string') {
@@ -519,7 +519,7 @@ async function startServer() {
     try {
       const { email } = req.body;
       const normalizedEmail = email.toLowerCase();
-      
+
       const user = await prisma.users.findUnique({ where: { email: normalizedEmail } });
       if (!user) {
         // Return 200 even if user not found to prevent email enumeration
@@ -657,7 +657,7 @@ async function startServer() {
       if (req.user?.role !== 'STUDENT') {
         return res.status(403).json({ message: "Only students can book sessions" });
       }
-      
+
       const mentor = await prisma.users.findUnique({ where: { id: Number(mentorId) } });
       if (!mentor || mentor.role !== 'MENTOR') {
         return res.status(404).json({ message: "Mentor not found or invalid" });
@@ -670,20 +670,20 @@ async function startServer() {
       if (!razorpay) {
         return res.status(503).json({ message: "Payment gateway is not configured on the server." });
       }
-      
+
       // Minimum 1 INR (100 paise) required for Razorpay
       const amountInPaise = Math.max(Number(actualPrice) * 100, 100);
 
       let order;
       try {
-         order = await razorpay.orders.create({
-           amount: amountInPaise,
-           currency: "INR",
-           receipt: `receipt_session_${Date.now()}`,
-         });
+        order = await razorpay.orders.create({
+          amount: amountInPaise,
+          currency: "INR",
+          receipt: `receipt_session_${Date.now()}`,
+        });
       } catch (err) {
-         console.error("Razorpay order error:", err);
-         return res.status(500).json({ message: "Failed to initialize payment order" });
+        console.error("Razorpay order error:", err);
+        return res.status(500).json({ message: "Failed to initialize payment order" });
       }
 
       const stmt = await prisma.sessions.create({
@@ -699,8 +699,8 @@ async function startServer() {
         }
       });
 
-      res.status(201).json({ 
-        id: stmt.id, 
+      res.status(201).json({
+        id: stmt.id,
         message: "Session initiated successfully",
         orderId: order.id,
         amount: order.amount,
@@ -714,7 +714,7 @@ async function startServer() {
   app.post("/api/sessions/verify-payment", authenticateToken, async (req: AuthRequest, res, next) => {
     try {
       const { razorpay_order_id, razorpay_payment_id, razorpay_signature, sessionId } = req.body;
-      
+
       const body = razorpay_order_id + "|" + razorpay_payment_id;
       const expectedSignature = crypto
         .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "")
@@ -1170,7 +1170,7 @@ async function startServer() {
       const totalCount = await prisma.masterclasses.count({
         where: { scheduledDate: { gte: new Date() } }
       });
-      
+
       const formattedData = masterclasses.map(m => ({
         ...m,
         mentorName: m.users?.name,
