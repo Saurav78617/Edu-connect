@@ -1291,9 +1291,13 @@ async function startServer() {
     });
   }
 
+  console.log(`Attempting to listen on port ${PORT}...`);
   httpServer.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }
 
-startServer();
+startServer().catch((err) => {
+  console.error("FATAL: Server failed to start:", err);
+  process.exit(1);
+});
