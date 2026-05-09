@@ -1278,7 +1278,8 @@ async function startServer() {
     console.error("Server Error:", err);
     res.status(500).json({
       message: "Internal Server Error",
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+      error: err.message,
+      stack: err.stack
     });
   });
 
