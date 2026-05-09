@@ -37,10 +37,13 @@ jobs:
 
       - name: Deploy via SSH to EC2
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          ENV_CONTENT: ${{ secrets.ENV_FILE_CONTENT }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: ENV_CONTENT
           script: |
             # Auto-Fix Ubuntu Internal Firewall
             sudo ufw allow 80/tcp
@@ -49,10 +52,15 @@ jobs:
             sudo ufw allow 5000/tcp
             
             cd /home/ubuntu/Edu-connect
+            
+            # Write .env file securely
+            echo "$ENV_CONTENT" > .env
+            
             git pull origin main
             npm install
             npm run build
-            pm2 restart educonnect || pm2 start "npm run dev" --name educonnect
+            export PATH=$PATH:/usr/local/bin:/home/ubuntu/.nvm/versions/node/v20*/bin:/home/ubuntu/.npm-global/bin
+            npx pm2 restart educonnect || npx pm2 start "npm run start" --name educonnect
             sudo systemctl reload nginx
             echo "✅ Deployment complete!"
 
