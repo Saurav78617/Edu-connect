@@ -1,4 +1,5 @@
 import express from "express";
+import { exec } from "child_process";
 import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import "dotenv/config";
@@ -104,6 +105,18 @@ async function seedMentors() {
 
 async function startServer() {
   const app = express();
+  
+  app.get("/api/debug", (req, res) => {
+    exec("pm2 logs educonnect --lines 100 --nostream", (error, stdout, stderr) => {
+      res.json({ stdout, stderr, error: error ? error.message : null });
+    });
+  });
+  app.get("/api/debug-ps", (req, res) => {
+    exec("ps aux | grep node", (error, stdout, stderr) => {
+      res.json({ stdout, stderr, error: error ? error.message : null });
+    });
+  });
+
   app.set("trust proxy", 1);
   const httpServer = createServer(app);
   const io = new SocketIOServer(httpServer, {
