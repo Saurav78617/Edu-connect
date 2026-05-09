@@ -25,9 +25,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Add Github Actions IP to Security group
+      - name: Auto-Open Ports in AWS Security Group
         run: |
-          aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32
+          # Allow SSH for Github Actions runner
+          aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32 || true
+          # Permanently allow public web traffic to the app on common ports
+          aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 80 --cidr 0.0.0.0/0 || true
+          aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 443 --cidr 0.0.0.0/0 || true
+          aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 3000 --cidr 0.0.0.0/0 || true
+          aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 5000 --cidr 0.0.0.0/0 || true
 
       - name: Deploy via SSH to EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -36,6 +42,12 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Auto-Fix Ubuntu Internal Firewall
+            sudo ufw allow 80/tcp
+            sudo ufw allow 443/tcp
+            sudo ufw allow 3000/tcp
+            sudo ufw allow 5000/tcp
+            
             cd /home/ubuntu/Edu-connect
             git pull origin main
             npm install
