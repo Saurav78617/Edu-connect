@@ -1278,8 +1278,9 @@ async function startServer() {
     console.error("Server Error:", err);
     res.status(500).json({
       message: "Internal Server Error",
-      error: err.message,
-      stack: err.stack
+      error: err ? String(err) : "Unknown error",
+      errorStack: err && err.stack ? err.stack : "No stack",
+      errorObj: JSON.stringify(err, Object.getOwnPropertyNames(err))
     });
   });
 
