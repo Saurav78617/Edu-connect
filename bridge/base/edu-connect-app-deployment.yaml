@@ -1,0 +1,65 @@
+#! edu-connect-app-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: edu-connect-app
+    namespace: edu-connnect-main
+    labels:
+        com.docker.compose.project: edu-connnect-main
+        com.docker.compose.service: edu-connect-app
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: edu-connnect-main
+            com.docker.compose.service: edu-connect-app
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: edu-connnect-main
+                com.docker.compose.service: edu-connect-app
+                com.docker.compose.network.default: "true"
+        spec:
+            restartPolicy: unless-stopped
+            containers:
+                - name: edu-connect-prod
+                  image: edu-connnect-main-edu-connect-app
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: DATABASE_URL
+                      value: "postgresql://postgres.sompkqvzdldmrqqlhidt:Saurav1766@@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+                    - name: DIRECT_URL
+                      value: "postgresql://postgres.sompkqvzdldmrqqlhidt:Saurav1766@@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
+                    - name: EMAIL_PASS
+                      value: "ggxn opto ernh huoc"
+                    - name: EMAIL_USER
+                      value: "kumarsourabh7813@gmail.com"
+                    - name: FRONTEND_URL
+                      value: "http://localhost:3000"
+                    - name: GEMINI_API_KEY
+                      value: "AIzaSyDVCtZPJw0uttNqc2Nh6sF1hbzu72x1Wbc"
+                    - name: GOOGLE_CLIENT_ID
+                      value: "95768404473-nalvkaruuhvi23hoegcdeqdnh11mah0f.apps.googleusercontent.com"
+                    - name: JWT_SECRET
+                      value: "educonnect_super_secret_jwt_key_2024"
+                    - name: RAZORPAY_KEY_ID
+                      value: "rzp_live_STqtSDMdPUk9eh"
+                    - name: RAZORPAY_KEY_SECRET
+                      value: "UrSk7r04KfCneIb2iVS5BO82"
+                    - name: VITE_GOOGLE_CLIENT_ID
+                      value: "95768404473-nalvkaruuhvi23hoegcdeqdnh11mah0f.apps.googleusercontent.com"
+                    - name: VITE_RAZORPAY_KEY_ID
+                      value: "rzp_live_STqtSDMdPUk9eh"
+                  ports:
+                    - name: edu-connec-3000
+                      containerPort: 3000
+                  volumeMounts:
+                    - name: data
+                      mountPath: /data
+            volumes:
+                - name: data
+                  persistentVolumeClaim:
+                    claimName: edu-connect-app-edu-connect-data

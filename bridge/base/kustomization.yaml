@@ -1,0 +1,15 @@
+#! kustomization.yaml
+# Generated code, do not edit
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+    - 0-edu-connnect-main-namespace.yaml
+    - db-deployment.yaml
+    - db-expose.yaml
+    - db-postgres-data-persistentVolumeClaim.yaml
+    - db-service.yaml
+    - default-network-policy.yaml
+    - edu-connect-app-deployment.yaml
+    - edu-connect-app-edu-connect-data-persistentVolumeClaim.yaml
+    - edu-connect-app-expose.yaml
+    - edu-connect-app-service.yaml

@@ -104,6 +104,7 @@ async function seedMentors() {
 
 async function startServer() {
   const app = express();
+  app.set("trust proxy", 1);
   const httpServer = createServer(app);
   const io = new SocketIOServer(httpServer, {
     cors: {
@@ -471,6 +472,9 @@ async function startServer() {
   app.post("/api/auth/login", authLimiter, async (req, res, next) => {
     try {
       const { email, password } = req.body;
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
       const normalizedEmail = email.toLowerCase();
       console.log("Login attempt for:", normalizedEmail);
       const user = await prisma.users.findUnique({ where: { email: normalizedEmail } });
@@ -518,6 +522,9 @@ async function startServer() {
   app.post("/api/auth/forgot-password", authLimiter, async (req, res, next) => {
     try {
       const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
       const normalizedEmail = email.toLowerCase();
 
       const user = await prisma.users.findUnique({ where: { email: normalizedEmail } });

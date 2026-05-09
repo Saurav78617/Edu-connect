@@ -1,0 +1,8 @@
+#! 0-edu-connnect-main-namespace.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: edu-connnect-main
+    labels:
+        com.docker.compose.project: edu-connnect-main
