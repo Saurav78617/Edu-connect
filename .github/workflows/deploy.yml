@@ -61,7 +61,8 @@ jobs:
             npm install
             npm run build
             export PATH=$PATH:/usr/local/bin:/home/ubuntu/.nvm/versions/node/v20*/bin:/home/ubuntu/.npm-global/bin
-            npx pm2 restart educonnect || npx pm2 start "npm run start" --name educonnect
+            npx pm2 delete educonnect || true
+            npx pm2 start "npm run start" --name educonnect
             sudo systemctl reload nginx
             echo "✅ Deployment complete!"
 
