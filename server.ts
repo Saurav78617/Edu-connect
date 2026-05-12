@@ -1289,11 +1289,16 @@ async function startServer() {
   // Global Error Handler
   app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     console.error("Server Error:", err);
+    try {
+      require("fs").appendFileSync(process.cwd() + "/dist/error.log", `[${new Date().toISOString()}] ${req.method} ${req.url}\n${err.stack}\n\n`);
+    } catch(e) {}
     res.status(500).json({
       message: "Internal Server Error",
-      error: err ? String(err) : "Unknown error",
-      errorStack: err && err.stack ? err.stack : "No stack",
-      errorObj: JSON.stringify(err, Object.getOwnPropertyNames(err))
+      ...(req.query.debug === 'true' ? {
+        error: err ? String(err) : "Unknown error",
+        errorStack: err && err.stack ? err.stack : "No stack",
+        errorObj: JSON.stringify(err, Object.getOwnPropertyNames(err))
+      } : {})
     });
   });
 
