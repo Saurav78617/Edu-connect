@@ -35,6 +35,27 @@ jobs:
           aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 3000 --cidr 0.0.0.0/0 || true
           aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 5000 --cidr 0.0.0.0/0 || true
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Build and Package Application
+        run: |
+          npm install
+          npm run build
+          # Compress the required files for production to avoid sending unused files
+          tar -czf deploy.tar.gz dist node_modules prisma server.ts package.json src
+
+      - name: Copy Files to EC2
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: 13.63.161.112
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "deploy.tar.gz"
+          target: "/home/ubuntu/Edu-connect/"
+
       - name: Deploy via SSH to EC2
         uses: appleboy/ssh-action@v1.0.3
         env:
@@ -56,11 +77,17 @@ jobs:
             # Write .env file securely
             echo "$ENV_CONTENT" > .env
             
-            git fetch origin main
-            git reset --hard origin/main
-            npm install
-            npm run build:db
+            # Extract the built application
+            tar -xzf deploy.tar.gz
+            rm deploy.tar.gz
+            
             export PATH=$PATH:/usr/local/bin:/home/ubuntu/.nvm/versions/node/v20*/bin:/home/ubuntu/.npm-global/bin
+            
+            # Run Prisma DB Push just in case (fast, low memory)
+            npx prisma generate
+            npx prisma db push --accept-data-loss
+            
+            # Restart PM2
             npx pm2 restart educonnect || npx pm2 start "npm run start" --name educonnect
             npx pm2 logs educonnect --lines 100 --nostream > dist/pm2-logs.txt || true
             sudo systemctl reload nginx
