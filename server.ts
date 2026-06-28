@@ -1293,7 +1293,7 @@ async function startServer() {
       require("fs").appendFileSync(process.cwd() + "/dist/error.log", `[${new Date().toISOString()}] ${req.method} ${req.url}\n${err.stack}\n\n`);
     } catch(e) {}
     res.status(500).json({
-      message: "Internal Server Error",
+      message: err.message || "Internal Server Error",
       ...(req.query.debug === 'true' ? {
         error: err ? String(err) : "Unknown error",
         errorStack: err && err.stack ? err.stack : "No stack",
