@@ -7,7 +7,7 @@
     "start": "NODE_ENV=production tsx server.ts",
     "dev": "tsx server.ts",
     "build": "npm run build:db && npm run build:ui",
-    "build:db": "npx prisma generate && npx prisma db push --accept-data-loss",
+    "build:db": "npx prisma generate",
     "build:ui": "NODE_OPTIONS=--max-old-space-size=4096 vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
