@@ -30,10 +30,10 @@ jobs:
           # Allow SSH for Github Actions runner
           aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 22 --cidr ${{ steps.ip.outputs.ipv4 }}/32 || true
           # Permanently allow public web traffic to the app on common ports
-          aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 80 --cidr 0.0.0.0/0 || true
-          aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 443 --cidr 0.0.0.0/0 || true
-          aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 3000 --cidr 0.0.0.0/0 || true
-          aws ec2 authorize-security-group-ingress --group-id ${{ secrets.AWS_SG_ID }} --protocol tcp --port 5000 --cidr 0.0.0.0/0 || true
+          aws ec2 describe-security-groups --group-ids "${{ secrets.AWS_SG_ID }}" --query "SecurityGroups[0].IpPermissions[?FromPort==\`80\` && ToPort==\`80\` && IpProtocol=='tcp'].IpRanges[?CidrIp=='0.0.0.0/0']" --output text | grep -q "0.0.0.0/0" || aws ec2 authorize-security-group-ingress --group-id "${{ secrets.AWS_SG_ID }}" --protocol tcp --port 80 --cidr 0.0.0.0/0
+          aws ec2 describe-security-groups --group-ids "${{ secrets.AWS_SG_ID }}" --query "SecurityGroups[0].IpPermissions[?FromPort==\`443\` && ToPort==\`443\` && IpProtocol=='tcp'].IpRanges[?CidrIp=='0.0.0.0/0']" --output text | grep -q "0.0.0.0/0" || aws ec2 authorize-security-group-ingress --group-id "${{ secrets.AWS_SG_ID }}" --protocol tcp --port 443 --cidr 0.0.0.0/0
+          aws ec2 describe-security-groups --group-ids "${{ secrets.AWS_SG_ID }}" --query "SecurityGroups[0].IpPermissions[?FromPort==\`3000\` && ToPort==\`3000\` && IpProtocol=='tcp'].IpRanges[?CidrIp=='0.0.0.0/0']" --output text | grep -q "0.0.0.0/0" || aws ec2 authorize-security-group-ingress --group-id "${{ secrets.AWS_SG_ID }}" --protocol tcp --port 3000 --cidr 0.0.0.0/0
+          aws ec2 describe-security-groups --group-ids "${{ secrets.AWS_SG_ID }}" --query "SecurityGroups[0].IpPermissions[?FromPort==\`5000\` && ToPort==\`5000\` && IpProtocol=='tcp'].IpRanges[?CidrIp=='0.0.0.0/0']" --output text | grep -q "0.0.0.0/0" || aws ec2 authorize-security-group-ingress --group-id "${{ secrets.AWS_SG_ID }}" --protocol tcp --port 5000 --cidr 0.0.0.0/0
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
