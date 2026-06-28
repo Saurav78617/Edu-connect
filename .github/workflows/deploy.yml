@@ -98,7 +98,7 @@ jobs:
             npx prisma db push --accept-data-loss
             
             # Restart PM2
-            npx pm2 restart educonnect || npx pm2 start "npm run start" --name educonnect
+            npx pm2 restart educonnect --update-env || npx pm2 start "npm run start" --name educonnect
             npx pm2 logs educonnect --lines 100 --nostream > dist/pm2-logs.txt || true
             sudo systemctl reload nginx
             echo "✅ Deployment complete!"
