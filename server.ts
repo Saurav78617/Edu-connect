@@ -22,7 +22,7 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const prisma = new PrismaClient();
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET as string;
 if (!JWT_SECRET) {
   throw new Error("FATAL ERROR: JWT_SECRET environment variable is missing.");
 }
@@ -298,7 +298,7 @@ async function startServer() {
         return res.status(400).json({ message: "Account already exists. Please log in." });
       }
 
-      let skillsArray = [];
+      let skillsArray: string[] = [];
       try {
         if (typeof skills === 'string') {
           skillsArray = skills.split(',').map((s: string) => s.trim()).filter((s: string) => s);
@@ -399,7 +399,7 @@ async function startServer() {
         return res.status(400).json({ message: "Email already exists" });
       }
 
-      let skillsArray = [];
+      let skillsArray: string[] = [];
       try {
         if (typeof skills === 'string') {
           skillsArray = skills.split(',').map((s: string) => s.trim()).filter((s: string) => s);
